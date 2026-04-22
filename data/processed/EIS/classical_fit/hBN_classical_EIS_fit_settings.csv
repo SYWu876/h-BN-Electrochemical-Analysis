@@ -1,0 +1,8 @@
+Parameter,Unit,Optimization_representation,Initial_guess,Lower_bound,Upper_bound,Optimized_value
+L,H,linear,1.83e-07,0.0,0.001,1.828e-07
+Rs,Ohm,linear,1.33,0.0,100.0,1.329
+R1,Ohm,log10,34.0,0.001,1000000.0,33.99
+Q1,S·s^alpha,log10,0.00331,1e-08,100.0,0.003313
+alpha1,-,linear,0.874,0.2,1.0,0.874
+Q2,S·s^alpha,log10,0.00231,1e-08,100.0,0.002315
+alpha2,-,linear,0.915,0.2,1.0,0.915

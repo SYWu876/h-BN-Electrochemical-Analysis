@@ -1,0 +1,107 @@
+package_path,category,analysis_family,file_type,size_bytes,description,sha256
+.gitignore,other,other,,60,Repository file,61407d178cda05d270b5eeaac2c4d118c10a91db4eb33ba63871eda7da50412a
+CITATION.cff,other,other,cff,1045,Repository file,b7ca460799609dacbe29b5288bfae38a456abe364db9a1976a17711ed59089bd
+README.md,other,other,md,5394,Repository file,1c8c4918f2a740db5645f909f8947871d03c3ab42b3e72321cd4cdea4df45902
+data/processed/CV/Dunn_separation_maintext_matched_data.csv,processed,CV,csv,114154,Processed CV descriptor or Dunn-separation table,efd5977621824fcb2a02b980f8477770a0c994e07e9f3bd74f651b2b09d8fee4
+data/processed/CV/fractional_capacitive_check.csv,processed,CV,csv,473,Processed CV descriptor or Dunn-separation table,a37d2f2df3119dead4c2921be8c0155bba13168715e5d98c2e0b4b22c35aad0e
+data/processed/CV/hBN_CV_descriptors.csv,processed,CV,csv,464,Processed CV descriptor or Dunn-separation table,bc877b28280c7b5aaf1948bfb3875f7cb6d63d2df6ce9dbbaff329e2d7337e1e
+data/processed/CV/hBN_logi_lognu_data.csv,processed,CV,csv,4376,Processed CV descriptor or Dunn-separation table,9fa2196e7f34e268746b66991e953ee094939b9d81c150a7484a5a46fe7729dc
+data/processed/CV_segmentation/hBN_Ising_QKPCA_settings.csv,processed,CV_segmentation,csv,2109,Processed CV segmentation or Q-KPCA output,4a2e5bd559d7611dc1c075fa520427e5065d8fd3524693468f14b8d87bedbabc
+data/processed/CV_segmentation/hBN_QKPCA_eigenvalues.csv,processed,CV_segmentation,csv,250,Processed CV segmentation or Q-KPCA output,7181b2dac3b24952e6b31938eb4857ec804f62335ab64af104945bcd740cae1e
+data/processed/CV_segmentation/hBN_QKPCA_embedding.csv,processed,CV_segmentation,csv,301,Processed CV segmentation or Q-KPCA output,77300a235b326fa539c96db1958ef9be29b6dc8b7e46f16ec8393060cea8c7ed
+data/processed/CV_segmentation/hBN_QKPCA_kernel_matrix.csv,processed,CV_segmentation,csv,685,Processed CV segmentation or Q-KPCA output,fd57148d23e1c21ad198f9fcb83c3eae195b17e99cbaf682787b4de54a4f6719
+data/processed/CV_segmentation/hBN_local_field_and_labels.csv,processed,CV_segmentation,csv,51346,Processed CV segmentation or Q-KPCA output,94923ced6787d6b048708e3bfbbfb0f8ce0d1d05ddda1ef8b5e141b274eae3cc
+data/processed/CV_segmentation/hBN_transition_points.csv,processed,CV_segmentation,csv,212,Processed CV segmentation or Q-KPCA output,b220188362ac2a2cdc2a713c04ce883a90b22fb1a59ecabe7fad180470911e32
+data/processed/EIS/classical_fit/hBN_EIS_final_fit_parameters.csv,processed,EIS_classical,csv,385,Processed classical EIS fitting output,6e5046aaa74b32d6b2cc1fdb2d53a6fcbd7504e760934c26f23666ed6734b4ef
+data/processed/EIS/classical_fit/hBN_EIS_final_fitting_curve.csv,processed,EIS_classical,csv,21782,Processed classical EIS fitting output,6bf09fabbdd18d3476896401e0c9fabefbeffcc176a64a8ae9fc9b5220f04a87
+data/processed/EIS/classical_fit/hBN_EIS_residuals_final_model.csv,processed,EIS_classical,csv,13089,Processed classical EIS fitting output,fd1834bb44d25a96aa120ff22a730b480fb1e02d2f3390f910a20c8cd9383564
+data/processed/EIS/classical_fit/hBN_classical_EIS_fit_settings.csv,processed,EIS_classical,csv,382,Processed classical EIS fitting output,d6941daa099aa0e167f05b7a27f241082a47fe6f18237fe0d4809b9b269e9e39
+data/processed/EIS/hBN_quantum_slice_anchor_settings.csv,processed,EIS,csv,267,Processed EIS support table,ffea23576bf4473159c7640ec3f80449e149c7030747cf09e70753b6a239a869
+data/processed/EIS/qaoa_landscapes/R1_Q1_slice.csv,processed,EIS_qaoa_landscapes,csv,2666591,Processed surrogate or QAOA landscape output,7a01b1db5a79f591290d5159897419bb19da84c6294a67ee5ae67511c3835186
+data/processed/EIS/qaoa_landscapes/Rs_alpha1_slice.csv,processed,EIS_qaoa_landscapes,csv,2905045,Processed surrogate or QAOA landscape output,7738f5feb03524190aca97a71f37794ada0d03495b102fabce45b32287a833fc
+data/processed/EIS/qaoa_landscapes/hBN_qaoa_coarse_landscape.csv,processed,EIS_qaoa_landscapes,csv,93495,Processed surrogate or QAOA landscape output,421ac03ad05d0b5301e153d327dc69fa69578bb666b9dedb6c8c03506ad8eb3e
+data/processed/EIS/qaoa_landscapes/hBN_qaoa_refined_landscape.csv,processed,EIS_qaoa_landscapes,csv,209009,Processed surrogate or QAOA landscape output,749b8d101b3fc58523e6a2d3b530506f01488ec8a7f7eac0e672e041009a4a96
+data/processed/EIS/qaoa_landscapes/hBN_surrogate_fidelity.csv,processed,EIS_qaoa_landscapes,csv,11800,Processed surrogate or QAOA landscape output,470b35e08b5e0d5f6a7994021ae4cb12896b7c47c318dbb9ab29e621f562d84e
+data/processed/EIS/qaoa_landscapes/hBN_surrogate_slice.csv,processed,EIS_qaoa_landscapes,csv,2248563,Processed surrogate or QAOA landscape output,cc622221ffb300388054d4ef4253742cf1d27292cb1b81ac9df13470b4a585f0
+data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_metrics.csv,processed,EIS_quantum_branches,csv,118,Processed continuous/discrete quantum-branch comparison output,446a1da24401c5ba16954d0b3c651fc3c5344e1fce9edc3aa256240d687302dc
+data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_overlays.csv,processed,EIS_quantum_branches,csv,41957,Processed continuous/discrete quantum-branch comparison output,14dddb918f691d8c990b7a8482e001c48ac137e4142fc287d077a5e9290d1451
+data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_parameters.csv,processed,EIS_quantum_branches,csv,441,Processed continuous/discrete quantum-branch comparison output,cd2cdbaa43a24e1751c05fbe47d38c3af77c7c3f35d71812d7e0b495f5fa66e8
+data/processed/EIS/quantum_branches/hBN_parameter_deviations.csv,processed,EIS_quantum_branches,csv,1133,Processed continuous/discrete quantum-branch comparison output,e0e09bf975f64f45f4049a12d1221b2419c5de4c67920cb19df55fb464b66bf3
+data/processed/GCD/hBN_GCD_base_fit_parameters.csv,processed,GCD,csv,894,"Processed GCD fit, bootstrap, or residual table",3b5f8f18bd7bbe150d08fea1ea8b847cd4a1159708802e51073726e0f9bc602d
+data/processed/GCD/hBN_GCD_bootstrap_samples.csv,processed,GCD,csv,48666,"Processed GCD fit, bootstrap, or residual table",5725f65a1be5fbdbcdd830eb8cd9baf09e7d5c943707acf8acf763172e3cb714
+data/processed/GCD/hBN_GCD_bootstrap_summary.csv,processed,GCD,csv,1551,"Processed GCD fit, bootstrap, or residual table",ccdbd4923a16c11cb40d7be59e93b317053521f92a13ada1343cdb42c016474e
+data/processed/GCD/hBN_GCD_bounded_fit_summary.csv,processed,GCD,csv,2321,"Processed GCD fit, bootstrap, or residual table",ece72169411ea2a8bbd82c9e01b2d8eeb36dcab193f59caf75164e8127e1ab5f
+data/processed/GCD/hBN_GCD_fit_residuals.csv,processed,GCD,csv,764433,"Processed GCD fit, bootstrap, or residual table",e0a67c0a22ff6fde57b21c4791f8de699974be69d3cbd72f8fdd18fd7f54c29c
+data/processed/GCD/hBN_GCD_residual_summary.csv,processed,GCD,csv,620,"Processed GCD fit, bootstrap, or residual table",45ab3bff5688b1c54c7557f844aac46f37d46389db4624b8b0467360664638e9
+data/raw/CV/CV_total.csv,raw,CV,csv,210223,Raw cyclic voltammetry input or derived source table,a86e16dd125233e2e16a91c273960f62fa886d4afafd17059493172b194bedb7
+data/raw/CV/hBN_Dunn_partition_data.csv,raw,CV,csv,56392,Raw cyclic voltammetry input or derived source table,5b6f519c32ee8fc6d1680dde39f1afa56e624965ec05bb236be00619359003ca
+data/raw/CV/hBN_b_values.csv,raw,CV,csv,33819,Raw cyclic voltammetry input or derived source table,1eabd38b428bbd346e485360b62fc2943c5b6bb98b19cfcd1b485a16eb913d53
+data/raw/CV/hBN_fractional_capacitive.csv,raw,CV,csv,187,Raw cyclic voltammetry input or derived source table,5fa65230345ebbf487aae23c3443667624e2a797f4eb311cf0baedd28fe10be6
+data/raw/EIS/hbn_EIS_1.csv,raw,EIS,csv,33044,Raw electrochemical impedance spectrum,b70b8da6913851fdc3377b5b5fe525c4624b15cb9272c65efee4b7b7d7f9c984
+data/raw/GCD/GCD_total.csv,raw,GCD,csv,1197210,Raw galvanostatic charge-discharge input or preprocessing diagnostic table,7b371bf487dfd3d3e5d5c93978332e1ab6f30acfa912be73b6eeca4439efc24d
+data/raw/GCD/hBN_GCD_J1_processed_diagnostics.csv,raw,GCD,csv,205492,Raw galvanostatic charge-discharge input or preprocessing diagnostic table,8e4b0e34b070dbe15483f446ff96267f1f913546fb09efc8f646af3239da3fe2
+data/raw/GCD/hBN_GCD_J2_processed_diagnostics.csv,raw,GCD,csv,1024783,Raw galvanostatic charge-discharge input or preprocessing diagnostic table,0cc3e523744ae2d2dad32e18ebd63df89ce7da0feeaa1d272d398ebebd668957
+data/raw/GCD/hBN_GCD_J3_processed_diagnostics.csv,raw,GCD,csv,678112,Raw galvanostatic charge-discharge input or preprocessing diagnostic table,2218b4b51da973957e5a9c309ccd4aca7be72b1dd713c55636d048a003a2e758
+data/raw/GCD/hBN_GCD_J4_processed_diagnostics_rerun_tighter.csv,raw,GCD,csv,498382,Raw galvanostatic charge-discharge input or preprocessing diagnostic table,7f4a6af7b6795557eb08c80d644a3da1c00a1be65dda931ab76b806acfda26ec
+data/raw/GCD/hBN_GCD_J5_processed_diagnostics_rerun.csv,raw,GCD,csv,308304,Raw galvanostatic charge-discharge input or preprocessing diagnostic table,3f4362aa50cd75e6c4a573f9a66a2578b4896b53104731d3a4cf732aaf71111d
+data/raw/Raman/hBN-3.txt,raw,Raman,txt,4715,Raw Raman spectrum export,a4cafbbd3c701535d72c45118e4e2f52b2647b4092e794bba2464510cdb159c5
+data/raw/TEM/OneView 200kV 800kX 39972.tif,raw,TEM,tif,9634414,Raw TEM image or ROI-level analysis artifact,c8ce2b10afaec9bb767b62c4cc5ce9714db2ec256bfaf5b8bedd565c66f7cf8f
+data/raw/TEM/ROI-1 analysis/ROI1_TEM_enhancement_FFT_panel.png,raw,TEM,png,1016280,Raw TEM image or ROI-level analysis artifact,3949cd70dfd112262d0f5608ea7542d1cf0b5d003f44485ab218bb33071f976d
+data/raw/TEM/ROI-1 analysis/ROI1_bandpass_lattice.png,raw,TEM,png,40622,Raw TEM image or ROI-level analysis artifact,f69a0e58951793904e77b440ad826c8d2bfca49830f8c3a1eab1da3a993ed1fa
+data/raw/TEM/ROI-1 analysis/ROI1_conservative_enhanced.png,raw,TEM,png,79520,Raw TEM image or ROI-level analysis artifact,28e2c68babdd2689510fec34b216195774755772e44b185875babd2cc3a95a99
+data/raw/TEM/ROI-1 analysis/ROI1_estimated_lattice_maxima.csv,raw,TEM,csv,763,Raw TEM image or ROI-level analysis artifact,e598c4a5a5e4ac4d86c3e6843c0317cc659fa8f5435a90665a59f6952b26c215
+data/raw/TEM/ROI-1 analysis/ROI1_fft.png,raw,TEM,png,72293,Raw TEM image or ROI-level analysis artifact,d8aa66a3ce9abbc07c442d5c8294130f9484323448ddba37b1a31f4fccc10304
+data/raw/TEM/ROI-1 analysis/ROI1_lattice_maxima_overlay.png,raw,TEM,png,235010,Raw TEM image or ROI-level analysis artifact,3a94532c064dd8a8e51d911991282093d29574d4ac4d4324e8a9ed0143a3b5ea
+data/raw/TEM/ROI-2 analysis/ROI2_TEM_enhancement_FFT_panel.png,raw,TEM,png,983078,Raw TEM image or ROI-level analysis artifact,94cbf0441ac2c67844b57454d848a32984f82d1199c3bd241b4ba7334e4593a4
+data/raw/TEM/ROI-2 analysis/ROI2_bandpass_lattice.png,raw,TEM,png,41291,Raw TEM image or ROI-level analysis artifact,3a40764304dc7e29c916a2e0d4f1552c302466a5f66330c133a588f03d0efaf6
+data/raw/TEM/ROI-2 analysis/ROI2_conservative_enhanced.png,raw,TEM,png,74362,Raw TEM image or ROI-level analysis artifact,23e89bb82e9b78a2832aaaec63c65bda567ecdc62d9c9c5f695ed9cd58afa809
+data/raw/TEM/ROI-2 analysis/ROI2_estimated_lattice_maxima.csv,raw,TEM,csv,783,Raw TEM image or ROI-level analysis artifact,b2f6c959bed06721a3e62cd3e81bee3586525fbe873dcb30ebaac65fa86f97bb
+data/raw/TEM/ROI-2 analysis/ROI2_fft.png,raw,TEM,png,71727,Raw TEM image or ROI-level analysis artifact,585d2acf4023d3bf889f537c2f529311bc6402c82b0fd351b3b72806044173e3
+data/raw/TEM/ROI-2 analysis/ROI2_lattice_maxima_overlay.png,raw,TEM,png,238087,Raw TEM image or ROI-level analysis artifact,665d067d08996268e5b11c3c0461de3d07415b9f77bc3879773a78c1e48b5cbb
+data/raw/TEM/ROI-3 analysis/ROI3_TEM_enhancement_FFT_panel.png,raw,TEM,png,1015461,Raw TEM image or ROI-level analysis artifact,9d211323858446434c3b9bd0da7172f6e87b358e73086924bf20dac88f937e1e
+data/raw/TEM/ROI-3 analysis/ROI3_bandpass_lattice.png,raw,TEM,png,39691,Raw TEM image or ROI-level analysis artifact,6809f608e264b146c66fcd7be3e96f1894a1875ef9c23868aafd3ef37dc48e72
+data/raw/TEM/ROI-3 analysis/ROI3_conservative_enhanced.png,raw,TEM,png,79215,Raw TEM image or ROI-level analysis artifact,67098c5475e4442278e24fe20b5f3e94ea2561ef589fe754d2731fe50f43e897
+data/raw/TEM/ROI-3 analysis/ROI3_estimated_lattice_maxima.csv,raw,TEM,csv,827,Raw TEM image or ROI-level analysis artifact,39b5045244b5bc9803d54897afeb96569e3728b8968cb38adf1eddc5ecbeae18
+data/raw/TEM/ROI-3 analysis/ROI3_fft.png,raw,TEM,png,72070,Raw TEM image or ROI-level analysis artifact,657a1b720c10d5999de425fc38dcbbb4896b8cddeefee223f050930256292c26
+data/raw/TEM/ROI-3 analysis/ROI3_lattice_maxima_overlay.png,raw,TEM,png,237471,Raw TEM image or ROI-level analysis artifact,2aa0b11df7a92f89acb3071d91c2a4ea643befc507ed08d66e9e393d9d675ac1
+data/raw/TEM/ROI-4 analysis/ROI4_TEM_enhancement_FFT_panel.png,raw,TEM,png,1007597,Raw TEM image or ROI-level analysis artifact,32bac215a699c357f7e4266ff70730534e4e1aa8e8dca041658d7fdd8b22d4b5
+data/raw/TEM/ROI-4 analysis/ROI4_bandpass_lattice.png,raw,TEM,png,40675,Raw TEM image or ROI-level analysis artifact,2fdd73004bc0b354cea638ec46eead4ced6ef4762be8e98e0daff7042d14dd43
+data/raw/TEM/ROI-4 analysis/ROI4_conservative_enhanced.png,raw,TEM,png,76167,Raw TEM image or ROI-level analysis artifact,492ef3d0b3f5b9527b242b7346497cfe4a58b61f7e7c7695e5927ebb8e83bba1
+data/raw/TEM/ROI-4 analysis/ROI4_estimated_lattice_maxima.csv,raw,TEM,csv,878,Raw TEM image or ROI-level analysis artifact,375c5e4bb91dbef028331a41d4a96fac8bbe52b5dfb6c59bbb1fbfc5629f2b9c
+data/raw/TEM/ROI-4 analysis/ROI4_fft.png,raw,TEM,png,73116,Raw TEM image or ROI-level analysis artifact,8001db1429f723a1d85da6446b9eb382697cc6f8aba9c4bef3fb08900b510a8d
+data/raw/TEM/ROI-4 analysis/ROI4_lattice_maxima_overlay.png,raw,TEM,png,245275,Raw TEM image or ROI-level analysis artifact,514c42b118b949a69fae91e2b21aff6ebfc70feb362fdaf7107346c3446ab4ee
+data/raw/TEM/ROI-5 analysis/ROI5_TEM_enhancement_FFT_panel.png,raw,TEM,png,1011136,Raw TEM image or ROI-level analysis artifact,020ad4ca47c9074ec842e33b9907abec1f1d0f31982bfc845c1ee58d4b6b832e
+data/raw/TEM/ROI-5 analysis/ROI5_bandpass_lattice.png,raw,TEM,png,40705,Raw TEM image or ROI-level analysis artifact,3dbfedd0d592147caa244c304e64ba4c68697d956ce6f7aef13dd790576d0090
+data/raw/TEM/ROI-5 analysis/ROI5_conservative_enhanced.png,raw,TEM,png,76916,Raw TEM image or ROI-level analysis artifact,efca4c080e92f0580b9ce7aadb66b5c4a4d24a23a1105f532f67414119f7400f
+data/raw/TEM/ROI-5 analysis/ROI5_estimated_lattice_maxima.csv,raw,TEM,csv,803,Raw TEM image or ROI-level analysis artifact,39d3e0c24ecf4340f9d5d9e9d691a93b1a21057288701826430fa23b8ddf3172
+data/raw/TEM/ROI-5 analysis/ROI5_fft.png,raw,TEM,png,73120,Raw TEM image or ROI-level analysis artifact,6fe57ac3be819eac6f4a34572cd4e4d14a4f9a5a63cd271a06aa787970658b09
+data/raw/TEM/ROI-5 analysis/ROI5_lattice_maxima_overlay.png,raw,TEM,png,237393,Raw TEM image or ROI-level analysis artifact,b61712ba2495b4b85a970fb3fea02192de848d1fb202c391a3c21a553b467372
+data/raw/TEM/TEM 10 nm.png,raw,TEM,png,7485677,Raw TEM image or ROI-level analysis artifact,10da11c908f97db1c6af2ef5f7f52d00f5aadb1ac451b0a19a206fe803f703d6
+data/raw/XPS/HBN.xls,raw,XPS,xls,274432,Raw XPS spreadsheet export,c2cb7c3b6310d9882cfdbdb05ea992d4df899dd60b1c894694e8f670e521ee54
+docs/Note_S6_GitHub_v2.md,documentation,docs,md,2302,Repository documentation file,6454979e5d7bf506f9d4e285f430d9819774b6ce16c971007d0e117540440f9e
+docs/manifest.csv,documentation,docs,csv,7145,Repository documentation file,f843080e5074fe1302364170bba43d42f36bb56fa461af8b1fdf43f2d58084b7
+figures/SI/Figure S1.png,figure,supporting_information,png,641539,Supporting Information figure export,56d9b1a6aa4132528d211815423789011edad553aea732903f59d4c2a5dd20d7
+figures/SI/Figure S10.png,figure,supporting_information,png,652836,Supporting Information figure export,988cdc3553079e1211f57e752f02a4a7f1e9025bf157d7eb69c0f605573b3f5d
+figures/SI/Figure S11.png,figure,supporting_information,png,659153,Supporting Information figure export,410cfd8e75b3fa4a9a1787a7116f7ad286b2e9f9917776b21dbe959c94e4a274
+figures/SI/Figure S12.png,figure,supporting_information,png,5450109,Supporting Information figure export,839b8e2cef95b724e755810cfa09de88cb5aafb4a88629f096d4739fb4744bef
+figures/SI/Figure S13.png,figure,supporting_information,png,222324,Supporting Information figure export,6a1588f435344f2f3861a9d04c2589fdebba80e438823bd5ebb883e33d5c9096
+figures/SI/Figure S2.png,figure,supporting_information,png,604969,Supporting Information figure export,91210f670971b3594c467441cb71069339c9fdeb1bb62ebb27912d6060a16d7f
+figures/SI/Figure S3.png,figure,supporting_information,png,488728,Supporting Information figure export,50809b564c859a9120c24f74cc2960f40d85e11d325ec72afea1a587267bb2e5
+figures/SI/Figure S4.png,figure,supporting_information,png,301796,Supporting Information figure export,4e4ac1eeaaa4184591b8115d3009ceede2e550dc3a11dacf717654d5aff8da91
+figures/SI/Figure S5.png,figure,supporting_information,png,301824,Supporting Information figure export,d4f1b4bdc33cc3c69bc99125fbe8675eb2bb31250cf85365b17a3b881c2dc99c
+figures/SI/Figure S6.png,figure,supporting_information,png,467619,Supporting Information figure export,05a86f8e3f0b9ce5c5be3fc9bdfef02f3be5a87588cbacbcfa4d2510f6f13a35
+figures/SI/Figure S7.png,figure,supporting_information,png,368041,Supporting Information figure export,fb599137ee52c9553b9e5e31e3b2f1c688ddf2e3cb4c0f31505fc5b93a7a6bb8
+figures/SI/Figure S8.png,figure,supporting_information,png,663952,Supporting Information figure export,2d3fac4c9a0a545caad72938a284c3f45409aea8e48b4878c90e8bc34e55e69f
+figures/SI/Figure S9.png,figure,supporting_information,png,1023558,Supporting Information figure export,c4ba94751d46570a1a5149731b5ca9447c4cdaf5890b6f7928c7ccc20126d39b
+figures/main_text/Figure 1.png,figure,main_text,png,20500169,Main-text figure export,580e8dd8ffae7b51d08bee5c5fd075f05c63faafa7c666bbcd0bcde92c43cc96
+figures/main_text/Figure 2.png,figure,main_text,png,4488421,Main-text figure export,66ec21afcf7f8ffeeb1fb63f9d365bf0c0a0c259d5b145b68179fe7af3348821
+figures/main_text/Figure 3.png,figure,main_text,png,1345082,Main-text figure export,9a2f0e3bc04e78809691f1e053359861110fd36739ca25f683c7c8922253cd8b
+figures/main_text/Figure 4.png,figure,main_text,png,6064999,Main-text figure export,4ae83e333ff473064181813113266d5b4522a9b3031ffde4702f36ef4cce15f1
+figures/main_text/Figure 5.png,figure,main_text,png,1715520,Main-text figure export,240bd0e32af72ad6bbcf69369aab7b2cdcfd7bb58d79a6d29dbe470aaca8e708
+figures/main_text/Figure 6.png,figure,main_text,png,1342725,Main-text figure export,675d09d4c95966ca3453c367f3311d23d403429b54c9e64c2eec317559f2a733
+figures/main_text/Figure 7.png,figure,main_text,png,1961863,Main-text figure export,e315d3a2a9ef81098acaafa572b318a6403b5f771ff8d7d92cd22502df205e87
+figures/main_text/Figure 8.png,figure,main_text,png,4273524,Main-text figure export,a300a6846525b1bbb3cf44fee8ab9a1e36624a91214ae5bcd64312569f42bc1a
+requirements.txt,other,other,txt,36,Repository file,5b838bf2f0f241130d094fd5fff6eecb6ffe97ad1f4392df7e779d2a69505dcd
+scripts/01_classical_eis_fit.py,script,analysis,py,3368,Python analysis script,edde3133229404241f27281f395468e22c14601a3ea547d61d9363b17f746a14
+scripts/02_quantum_branch_comparison.py,script,analysis,py,4328,Python analysis script,07fecf5bab9843be7632b0f66c26d4f0b4b0f7c701bd891ca40dbbbd108839ea
+scripts/03_surrogate_qaoa_landscape.py,script,analysis,py,8386,Python analysis script,29dde62835111010a4d2f4bd3e584e778e1151cfd9a963adc80bd2ed51ccde39

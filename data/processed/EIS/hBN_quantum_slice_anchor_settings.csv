@@ -1,0 +1,3 @@
+Figure_S11_slice,x_axis_star_coordinate,y_axis_star_coordinate,trust_region_half_width_eta,bit_depth_per_parameter,levels_per_parameter,shot_setting
+"(z_R1, z_Q1)",z_R1*=0.7657,z_Q1*=0.7601,0.08,3,8,4096
+"(z_Rs, z_alpha1)",z_Rs*=0.5618,z_alpha1*=0.8324,0.08,3,8,4096

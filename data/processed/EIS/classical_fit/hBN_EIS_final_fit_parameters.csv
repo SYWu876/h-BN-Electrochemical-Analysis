@@ -1,0 +1,8 @@
+Parameter,Value,Unit,Meaning
+L,1.8280517419097853e-07,H,High-frequency inductive artifact
+Rs,1.3293768338559777,Ohm,Series/ohmic resistance
+R1,33.992671532191416,Ohm,Distributed interfacial resistance
+Q1,0.003312966226232971,S·s^alpha,CPE1 prefactor
+alpha1,0.8743619409335213,-,CPE1 exponent
+Q2,0.002314920575137976,S·s^alpha,CPE2 prefactor
+alpha2,0.9152312509549297,-,CPE2 exponent
