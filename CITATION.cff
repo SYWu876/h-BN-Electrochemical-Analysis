@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+title: "Structure-Guided Emergent Interfacial Electrochemistry in Liquid-Phase-Processed h-BN"
+message: "If you use this repository, please cite the associated manuscript and the repository release."
+type: dataset
+version: 1.0.0
+date-released: 2026-04-21
+authors:
+  - family-names: Hsu
+    given-names: Tsu-En
+  - family-names: Yu
+    given-names: Shih-Lung
+  - family-names: Chang
+    given-names: Chiung-Yu
+  - family-names: Lyu
+    given-names: Bing-Li
+  - family-names: Ramam
+    given-names: Koduri
+  - family-names: Wu
+    given-names: Yi-En
+  - family-names: Kuo
+    given-names: Heng-Chih
+  - family-names: Lin
+    given-names: Chun-Chieh
+  - family-names: Hsieh
+    given-names: Shang-Hsien
+  - family-names: Manjunatha
+    given-names: Krishtappa
+  - family-names: Ho
+    given-names: Ming-Kang
+  - family-names: Li
+    given-names: Tai-Yue
+  - family-names: Chen
+    given-names: Meng-Chu
+  - family-names: Wu
+    given-names: Sheng Yun
+    email: sywu@mail.ndhu.edu.tw
+    orcid: "https://orcid.org/0000-0003-2750-5431"
+repository-code: "local package for GitHub release"
