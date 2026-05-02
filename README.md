@@ -118,7 +118,13 @@ The full file-to-analysis mapping is listed in `docs/manifest.csv`.
 
 - macOS metadata files have been removed from this final package
 - file integrity hashes are listed in `docs/checksums.sha256`
-- before public release, you may additionally choose to add a project license and repository DOI/Zenodo record
+- repository licenses are included; before public release, you may additionally choose to add a repository DOI/Zenodo record
+
+## License
+
+Source code in `scripts/`, tests, and CI/configuration files are released under the MIT License; see `LICENSE`.
+
+Data tables, figure exports, and documentation are released under the Creative Commons Attribution 4.0 International License (CC BY 4.0); see `DATA_LICENSE.md`.
 
 ## Suggested citation
 
