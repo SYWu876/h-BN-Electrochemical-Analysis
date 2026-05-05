@@ -48,11 +48,10 @@ def test_eis_scripts_write_outputs_in_temporary_project(tmp_path: Path) -> None:
             "data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_overlays.csv",
         ],
         "03_surrogate_qaoa_landscape.py": [
-            "data/processed/EIS/qaoa_landscapes/Figure_12a_hBN_surrogate_slice.csv",
-            "data/processed/EIS/qaoa_landscapes/Figure_12b_hBN_qaoa_coarse_landscape.csv",
-            "data/processed/EIS/qaoa_landscapes/Figure_12c_hBN_qaoa_refined_landscape.csv",
-            "data/processed/EIS/qaoa_landscapes/Figure_12d_hBN_surrogate_fidelity.csv",
-            "data/processed/EIS/qaoa_landscapes/hBN_qaoa_summary.csv",
+            "data/processed/EIS/qaoa_landscapes/hBN_surrogate_slice.csv",
+            "data/processed/EIS/qaoa_landscapes/hBN_qaoa_coarse_landscape.csv",
+            "data/processed/EIS/qaoa_landscapes/hBN_qaoa_refined_landscape.csv",
+            "data/processed/EIS/qaoa_landscapes/hBN_surrogate_fidelity.csv",
         ],
     }
 
@@ -70,3 +69,7 @@ def test_eis_scripts_write_outputs_in_temporary_project(tmp_path: Path) -> None:
             output = project / output_path
             assert output.exists(), output_path
             assert output.stat().st_size > 0, output_path
+
+    qaoa_output = project / "data" / "processed" / "EIS" / "qaoa_landscapes"
+    assert not list(qaoa_output.glob("Figure_12*.csv"))
+    assert not (qaoa_output / "hBN_qaoa_summary.csv").exists()
