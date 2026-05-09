@@ -1,6 +1,6 @@
 # Structure-Guided Emergent Interfacial Electrochemistry in Liquid-Phase-Processed h-BN
 
-This repository packages the data products, figure exports, and analysis scripts accompanying the manuscript **"Structure-Guided Emergent Interfacial Electrochemistry in Liquid-Phase-Processed h-BN"**.
+This repository packages the data products and analysis scripts accompanying the manuscript **"Structure-Guided Emergent Interfacial Electrochemistry in Liquid-Phase-Processed h-BN"**.
 
 The study treats liquid-phase-processed h-BN as a **structure-defined reference platform** for understanding how defect heterogeneity, partial restacking, and near-surface perturbation can generate a measurable but distinctly non-ideal interfacial electrochemical response in a nominally insulating layered solid. The manuscript links structural characterization (HRTEM/FFT, Raman, XPS) to electrochemical analysis across CV, GCD, and EIS, and further compares classical, continuous, and discrete quantum-assisted inference routes for the EIS model.
 
@@ -10,8 +10,8 @@ This package is intended as a **GitHub-ready companion archive** for manuscript 
 
 - raw experimental files for **TEM, Raman, XPS, CV, GCD, and EIS**
 - processed CSV tables used to support the electrochemical analysis
-- exported **main-text figures (Figures 1-8)** and **Supporting Information figures (Figures S1-S13)**
-- lightweight Python scripts for rebuilding the included **EIS classical-fit and quantum-branch CSV outputs**
+- lightweight Python scripts for rebuilding selected **EIS classical-fit, quantum-branch, and surrogate/QAOA CSV outputs**
+- repository metadata, license files, smoke tests, and CI configuration
 - a regenerated machine-readable file manifest and checksums for archive integrity
 
 ## Repository layout
@@ -20,8 +20,14 @@ This package is intended as a **GitHub-ready companion archive** for manuscript 
 hBN_GitHub_Package_final/
 ├── README.md
 ├── CITATION.cff
+├── LICENSE
+├── DATA_LICENSE.md
 ├── requirements.txt
+├── requirements-dev.txt
+├── .gitattributes
 ├── .gitignore
+├── .github/
+│   └── workflows/
 ├── data/
 │   ├── raw/
 │   │   ├── CV/
@@ -38,17 +44,16 @@ hBN_GitHub_Package_final/
 │           ├── classical_fit/
 │           ├── quantum_branches/
 │           └── qaoa_landscapes/
-├── figures/
-│   ├── main_text/
-│   └── SI/
 ├── scripts/
 │   ├── 01_classical_eis_fit.py
 │   ├── 02_quantum_branch_comparison.py
 │   └── 03_surrogate_qaoa_landscape.py
+├── tests/
+│   └── test_package_smoke.py
 └── docs/
     ├── manifest.csv
     ├── checksums.sha256
-    └── Note_S6_GitHub_v2.md
+    └── Note_S9_GitHub_v4.md
 ```
 
 ## What is in each folder?
@@ -73,14 +78,8 @@ CSV tables prepared for plotting, fitting summaries, and manuscript-linked inter
 - `EIS/quantum_branches/`: branch parameters, metrics, overlays, and deviations
 - `EIS/qaoa_landscapes/`: surrogate slices and coarse/refined QAOA landscape tables
 
-### `figures/`
-PNG exports of manuscript figures.
-
-- `main_text/`: Figures 1-8
-- `SI/`: Figures S1-S13
-
 ### `scripts/`
-Minimal Python scripts included for rebuilding the EIS data products distributed in `data/processed/EIS/`.
+Minimal Python scripts included for rebuilding selected EIS data products distributed in `data/processed/EIS/`.
 
 ## Quick start
 
@@ -102,7 +101,7 @@ python scripts/02_quantum_branch_comparison.py
 python scripts/03_surrogate_qaoa_landscape.py
 ```
 
-The scripts write CSV outputs into the corresponding folders under `data/processed/EIS/`.
+The scripts write selected CSV outputs into the corresponding folders under `data/processed/EIS/`.
 
 ## Manuscript-level analysis map
 
@@ -117,14 +116,14 @@ The full file-to-analysis mapping is listed in `docs/manifest.csv`.
 ## Notes for public GitHub release
 
 - macOS metadata files have been removed from this final package
-- file integrity hashes are listed in `docs/checksums.sha256`
+- file inventory and integrity hashes are listed in `docs/manifest.csv` and `docs/checksums.sha256`; these integrity files intentionally omit themselves
 - repository licenses are included; before public release, you may additionally choose to add a repository DOI/Zenodo record
 
 ## License
 
 Source code in `scripts/`, tests, and CI/configuration files are released under the MIT License; see `LICENSE`.
 
-Data tables, figure exports, and documentation are released under the Creative Commons Attribution 4.0 International License (CC BY 4.0); see `DATA_LICENSE.md`.
+Data tables, image artifacts, and documentation are released under the Creative Commons Attribution 4.0 International License (CC BY 4.0); see `DATA_LICENSE.md`.
 
 ## Suggested citation
 

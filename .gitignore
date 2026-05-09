@@ -1,0 +1,16 @@
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local environments
+.venv/
+venv/
+env/
+
+# Local generated reports
+ADVISOR_REPORT.*
+
+# OS/editor metadata
+.DS_Store
+Thumbs.db
