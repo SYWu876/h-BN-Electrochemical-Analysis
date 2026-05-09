@@ -126,7 +126,7 @@ def main() -> None:
             z[i1] = XX[r, c]
             z[i2] = YY[r, c]
             ZZ[r, c] = sse_surrogate(z)
-    pd.DataFrame({"z_Q1": XX.ravel(), "z_alpha1": YY.ravel(), "surrogate_SSE": ZZ.ravel()}).to_csv(OUT / "Figure_12a_hBN_surrogate_slice.csv", index=False)
+    pd.DataFrame({"z_Q1": XX.ravel(), "z_alpha1": YY.ravel(), "surrogate_SSE": ZZ.ravel()}).to_csv(OUT / "hBN_surrogate_slice.csv", index=False)
 
     bitstrings = np.array(list(product([0, 1], repeat=6)), dtype=int)
     weights = np.array([4, 2, 1])
@@ -184,7 +184,7 @@ def main() -> None:
         "gamma": np.repeat(gamma_coarse[None, :], len(beta_coarse), axis=0).ravel(),
         "beta": np.repeat(beta_coarse[:, None], len(gamma_coarse), axis=1).ravel(),
         "expected_energy": EEc.ravel(),
-    }).to_csv(OUT / "Figure_12b_hBN_qaoa_coarse_landscape.csv", index=False)
+    }).to_csv(OUT / "hBN_qaoa_coarse_landscape.csv", index=False)
 
     gamma_ref = np.linspace(max(0, gamma_star_c - np.pi / 8), min(np.pi, gamma_star_c + np.pi / 8), 61)
     beta_ref = np.linspace(max(0, beta_star_c - np.pi / 10), min(np.pi / 2, beta_star_c + np.pi / 10), 61)
@@ -199,19 +199,13 @@ def main() -> None:
         "gamma": np.repeat(gamma_ref[None, :], len(beta_ref), axis=0).ravel(),
         "beta": np.repeat(beta_ref[:, None], len(gamma_ref), axis=1).ravel(),
         "expected_energy": EEr.ravel(),
-    }).to_csv(OUT / "Figure_12c_hBN_qaoa_refined_landscape.csv", index=False)
+    }).to_csv(OUT / "hBN_qaoa_refined_landscape.csv", index=False)
 
     rng = np.random.default_rng(7)
     samples = np.clip(z0 + rng.uniform(-eta, eta, size=(200, 7)), 0.0, 1.0)
     true_sse = np.array([sse_z(z) for z in samples])
     pred_sse = np.array([sse_surrogate(z) for z in samples])
-    pd.DataFrame({"surrogate_SSE": pred_sse, "true_SSE": true_sse}).to_csv(OUT / "Figure_12d_hBN_surrogate_fidelity.csv", index=False)
-
-    summary = pd.DataFrame({
-        "Item": ["finite_difference_step_h", "trust_region_eta", "bits_per_parameter", "levels_per_parameter", "shots", "gamma_coarse_opt", "beta_coarse_opt"],
-        "Value": [0.015, 0.08, 3, 8, 4096, gamma_star_c, beta_star_c],
-    })
-    summary.to_csv(OUT / "hBN_qaoa_summary.csv", index=False)
+    pd.DataFrame({"surrogate_SSE": pred_sse, "true_SSE": true_sse}).to_csv(OUT / "hBN_surrogate_fidelity.csv", index=False)
 
     print("Wrote surrogate / QAOA tables to", OUT)
 
