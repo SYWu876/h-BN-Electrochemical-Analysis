@@ -22,6 +22,7 @@ hBN_GitHub_Package_final/
 ├── CITATION.cff
 ├── LICENSE
 ├── DATA_LICENSE.md
+├── NOTICE
 ├── requirements.txt
 ├── requirements-dev.txt
 ├── .gitattributes
@@ -126,6 +127,8 @@ The full file-to-analysis mapping is listed in `docs/manifest.csv`.
 Source code in `scripts/`, tests, and CI/configuration files are released under the MIT License; see `LICENSE`.
 
 Data tables, image artifacts, and documentation are released under the Creative Commons Attribution 4.0 International License (CC BY 4.0); see `DATA_LICENSE.md`.
+
+The top-level `NOTICE` file records the path-level license scope for tools that need an explicit split-license summary.
 
 ## Suggested citation
 

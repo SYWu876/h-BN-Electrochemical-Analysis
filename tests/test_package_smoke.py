@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_TIMEOUT_SECONDS = 120
 
 
 def test_readme_and_citation_contact_email_match() -> None:
@@ -19,12 +20,13 @@ def test_readme_and_citation_contact_email_match() -> None:
     readme_match = re.search(r"^Email:\s*([^\s]+)\s*$", readme_text, flags=re.MULTILINE)
     citation_emails = re.findall(r"^\s*email:\s*([^\s]+)\s*$", citation_text, flags=re.MULTILINE)
 
-    assert readme_match is not None
-    assert citation_emails
-    assert readme_match.group(1) in citation_emails
-    assert "lightweight companion-archive rebuild helpers" in readme_text
-    assert "selected EIS data products" in readme_text
-    assert "archived supporting slices" in readme_text
+    assert readme_match is not None, "README correspondence email was not found"
+    assert citation_emails, "No author email entries were found in CITATION.cff"
+    assert readme_match.group(1) in citation_emails, (
+        f"README email {readme_match.group(1)!r} was not found in CITATION emails {citation_emails!r}"
+    )
+    assert "scripts/02_quantum_branch_comparison.py" in readme_text
+    assert "03_surrogate_qaoa_landscape.py" in readme_text
     assert "R1_Q1_slice.csv" in readme_text
     assert "Rs_alpha1_slice.csv" in readme_text
 
@@ -63,13 +65,21 @@ def test_eis_scripts_write_outputs_in_temporary_project(tmp_path: Path) -> None:
     }
 
     for script_name, output_paths in expected_outputs.items():
-        result = subprocess.run(
-            [sys.executable, str(project / "scripts" / script_name)],
-            cwd=project,
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
+        try:
+            result = subprocess.run(
+                [sys.executable, str(project / "scripts" / script_name)],
+                cwd=project,
+                capture_output=True,
+                text=True,
+                timeout=SCRIPT_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired as exc:
+            stdout = exc.stdout or ""
+            stderr = exc.stderr or ""
+            raise AssertionError(
+                f"{script_name} timed out after {SCRIPT_TIMEOUT_SECONDS} seconds\n"
+                f"stdout:\n{stdout}\n\nstderr:\n{stderr}"
+            ) from exc
         assert result.returncode == 0, result.stdout + result.stderr
 
         for output_path in output_paths:

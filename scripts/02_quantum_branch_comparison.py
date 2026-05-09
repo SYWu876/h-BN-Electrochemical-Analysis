@@ -80,6 +80,7 @@ def main() -> None:
 
     abs_cont = np.abs(p_cont - p_class)
     abs_disc = np.abs(p_disc - p_class)
+    relative_denominator = np.where(np.abs(p_class) > 0.0, np.abs(p_class), np.nan)
     deviations_df = pd.DataFrame({
         "Parameter": PARAMETER_NAMES,
         "Classical": p_class,
@@ -87,8 +88,8 @@ def main() -> None:
         "Discrete_branch": p_disc,
         "Absolute_deviation_continuous": abs_cont,
         "Absolute_deviation_discrete": abs_disc,
-        "Relative_deviation_continuous_percent": abs_cont / np.abs(p_class) * 100.0,
-        "Relative_deviation_discrete_percent": abs_disc / np.abs(p_class) * 100.0,
+        "Relative_deviation_continuous_percent": abs_cont / relative_denominator * 100.0,
+        "Relative_deviation_discrete_percent": abs_disc / relative_denominator * 100.0,
         "Unit": PARAMETER_UNITS,
     })
     deviations_df.to_csv(OUT / "hBN_parameter_deviations.csv", index=False)

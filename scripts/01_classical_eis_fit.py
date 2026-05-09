@@ -71,19 +71,18 @@ def main() -> None:
     )
 
     zfit = z_model(f, res.x)
-    fit_idx = np.arange(f.size)
     residual_idx = np.argsort(f)
 
     fit_df = pd.DataFrame({
-        "Frequency_Hz": f[fit_idx],
-        "Zprime_data_Ohm": zexp.real[fit_idx],
-        "minus_Zdoubleprime_data_Ohm": (-zexp.imag)[fit_idx],
-        "Zmag_data_Ohm": np.abs(zexp)[fit_idx],
-        "Phase_data_deg": np.angle(zexp, deg=True)[fit_idx],
-        "Zprime_fit_Ohm": zfit.real[fit_idx],
-        "minus_Zdoubleprime_fit_Ohm": (-zfit.imag)[fit_idx],
-        "Zmag_fit_Ohm": np.abs(zfit)[fit_idx],
-        "Phase_fit_deg": np.angle(zfit, deg=True)[fit_idx],
+        "Frequency_Hz": f,
+        "Zprime_data_Ohm": zexp.real,
+        "minus_Zdoubleprime_data_Ohm": -zexp.imag,
+        "Zmag_data_Ohm": np.abs(zexp),
+        "Phase_data_deg": np.angle(zexp, deg=True),
+        "Zprime_fit_Ohm": zfit.real,
+        "minus_Zdoubleprime_fit_Ohm": -zfit.imag,
+        "Zmag_fit_Ohm": np.abs(zfit),
+        "Phase_fit_deg": np.angle(zfit, deg=True),
     })
     fit_df.to_csv(OUT / "hBN_EIS_final_fitting_curve.csv", index=False)
 
