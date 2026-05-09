@@ -11,6 +11,9 @@ RAW = ROOT / "data" / "raw" / "EIS" / "hbn_EIS_1.csv"
 OUT = ROOT / "data" / "processed" / "EIS" / "quantum_branches"
 OUT.mkdir(parents=True, exist_ok=True)
 
+PARAMETER_NAMES = ["L", "Rs", "R1", "Q1", "alpha1", "Q2", "alpha2"]
+PARAMETER_UNITS = ["H", "Ohm", "Ohm", "S·s^alpha", "-", "S·s^alpha", "-"]
+
 
 def z_cpe(jw: np.ndarray, q: float, alpha: float) -> np.ndarray:
     return 1.0 / (q * (jw ** alpha))
@@ -57,6 +60,8 @@ def main() -> None:
     res = least_squares(residuals_fit, x0, bounds=(lb, ub), args=(f, zexp), max_nfev=50000, xtol=1e-12, ftol=1e-12, gtol=1e-12)
     p_class = np.array([res.x[0], res.x[1], 10**res.x[2], 10**res.x[3], res.x[4], 10**res.x[5], res.x[6]], float)
 
+    # Manuscript-linked reference branch parameters; this lightweight script compares them
+    # against the classical anchor but does not rerun the full quantum inference workflow.
     p_cont = np.array([1.86949039e-07, 1.35875136e+00, 3.38462246e+01, 3.29950223e-03, 8.76651483e-01, 2.31450321e-03, 9.15092829e-01], float)
     p_disc = np.array([1.85226350e-07, 1.27792466e+00, 3.53612945e+01, 3.53824936e-03, 8.60561941e-01, 2.34558071e-03, 9.13259822e-01], float)
 
@@ -65,13 +70,28 @@ def main() -> None:
     z_disc = z_model_phys(f, p_disc)
 
     param_df = pd.DataFrame({
-        "Parameter": ["L", "Rs", "R1", "Q1", "alpha1", "Q2", "alpha2"],
+        "Parameter": PARAMETER_NAMES,
         "Classical": p_class,
         "Continuous_branch": p_cont,
         "Discrete_branch": p_disc,
-        "Unit": ["H", "Ohm", "Ohm", "S·s^alpha", "-", "S·s^alpha", "-"],
+        "Unit": PARAMETER_UNITS,
     })
     param_df.to_csv(OUT / "hBN_EIS_quantum_branch_parameters.csv", index=False)
+
+    abs_cont = np.abs(p_cont - p_class)
+    abs_disc = np.abs(p_disc - p_class)
+    deviations_df = pd.DataFrame({
+        "Parameter": PARAMETER_NAMES,
+        "Classical": p_class,
+        "Continuous_branch": p_cont,
+        "Discrete_branch": p_disc,
+        "Absolute_deviation_continuous": abs_cont,
+        "Absolute_deviation_discrete": abs_disc,
+        "Relative_deviation_continuous_percent": abs_cont / np.abs(p_class) * 100.0,
+        "Relative_deviation_discrete_percent": abs_disc / np.abs(p_class) * 100.0,
+        "Unit": PARAMETER_UNITS,
+    })
+    deviations_df.to_csv(OUT / "hBN_parameter_deviations.csv", index=False)
 
     metrics_df = pd.DataFrame({
         "Route": ["Classical", "Continuous_branch", "Discrete_branch"],

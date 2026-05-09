@@ -17,6 +17,18 @@ RAW = ROOT / "data" / "raw" / "EIS" / "hbn_EIS_1.csv"
 OUT = ROOT / "data" / "processed" / "EIS" / "classical_fit"
 OUT.mkdir(parents=True, exist_ok=True)
 
+PARAMETER_NAMES = ["L", "Rs", "R1", "Q1", "alpha1", "Q2", "alpha2"]
+PARAMETER_UNITS = ["H", "Ohm", "Ohm", "S·s^alpha", "-", "S·s^alpha", "-"]
+PARAMETER_MEANINGS = [
+    "High-frequency inductive artifact",
+    "Series/ohmic resistance",
+    "Distributed interfacial resistance",
+    "CPE1 prefactor",
+    "CPE1 exponent",
+    "CPE2 prefactor",
+    "CPE2 exponent",
+]
+
 
 def z_cpe(jw: np.ndarray, q: float, alpha: float) -> np.ndarray:
     return 1.0 / (q * (jw ** alpha))
@@ -59,34 +71,36 @@ def main() -> None:
     )
 
     zfit = z_model(f, res.x)
-    idx = np.argsort(f)
+    fit_idx = np.arange(f.size)
+    residual_idx = np.argsort(f)
 
     fit_df = pd.DataFrame({
-        "Frequency_Hz": f[idx],
-        "Zprime_data_Ohm": zexp.real[idx],
-        "minus_Zdoubleprime_data_Ohm": (-zexp.imag)[idx],
-        "Zmag_data_Ohm": np.abs(zexp)[idx],
-        "Phase_data_deg": np.angle(zexp, deg=True)[idx],
-        "Zprime_fit_Ohm": zfit.real[idx],
-        "minus_Zdoubleprime_fit_Ohm": (-zfit.imag)[idx],
-        "Zmag_fit_Ohm": np.abs(zfit)[idx],
-        "Phase_fit_deg": np.angle(zfit, deg=True)[idx],
+        "Frequency_Hz": f[fit_idx],
+        "Zprime_data_Ohm": zexp.real[fit_idx],
+        "minus_Zdoubleprime_data_Ohm": (-zexp.imag)[fit_idx],
+        "Zmag_data_Ohm": np.abs(zexp)[fit_idx],
+        "Phase_data_deg": np.angle(zexp, deg=True)[fit_idx],
+        "Zprime_fit_Ohm": zfit.real[fit_idx],
+        "minus_Zdoubleprime_fit_Ohm": (-zfit.imag)[fit_idx],
+        "Zmag_fit_Ohm": np.abs(zfit)[fit_idx],
+        "Phase_fit_deg": np.angle(zfit, deg=True)[fit_idx],
     })
     fit_df.to_csv(OUT / "hBN_EIS_final_fitting_curve.csv", index=False)
 
     l_, rs, log_r1, log_q1, a1, log_q2, a2 = res.x
     param_df = pd.DataFrame({
-        "Parameter": ["L", "Rs", "R1", "Q1", "alpha1", "Q2", "alpha2"],
+        "Parameter": PARAMETER_NAMES,
         "Value": [l_, rs, 10**log_r1, 10**log_q1, a1, 10**log_q2, a2],
-        "Unit": ["H", "Ohm", "Ohm", "S·s^alpha", "-", "S·s^alpha", "-"],
+        "Unit": PARAMETER_UNITS,
+        "Meaning": PARAMETER_MEANINGS,
     })
     param_df.to_csv(OUT / "hBN_EIS_final_fit_parameters.csv", index=False)
 
-    zfit_s = zfit[idx]
-    zexp_s = zexp[idx]
+    zfit_s = zfit[residual_idx]
+    zexp_s = zexp[residual_idx]
     norm = np.abs(zexp_s)
     residual_df = pd.DataFrame({
-        "Frequency_Hz": f[idx],
+        "Frequency_Hz": f[residual_idx],
         "Residual_ReZ_data_minus_fit_Ohm": zexp_s.real - zfit_s.real,
         "Residual_ImZ_data_minus_fit_Ohm": zexp_s.imag - zfit_s.imag,
         "Residual_ReZ_over_absZ": (zexp_s.real - zfit_s.real) / norm,

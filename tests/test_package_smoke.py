@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import py_compile
 import re
 import shutil
@@ -21,6 +22,11 @@ def test_readme_and_citation_contact_email_match() -> None:
     assert readme_match is not None
     assert citation_emails
     assert readme_match.group(1) in citation_emails
+    assert "lightweight companion-archive rebuild helpers" in readme_text
+    assert "selected EIS data products" in readme_text
+    assert "archived supporting slices" in readme_text
+    assert "R1_Q1_slice.csv" in readme_text
+    assert "Rs_alpha1_slice.csv" in readme_text
 
 
 def test_analysis_scripts_compile(tmp_path: Path) -> None:
@@ -46,6 +52,7 @@ def test_eis_scripts_write_outputs_in_temporary_project(tmp_path: Path) -> None:
             "data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_parameters.csv",
             "data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_metrics.csv",
             "data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_overlays.csv",
+            "data/processed/EIS/quantum_branches/hBN_parameter_deviations.csv",
         ],
         "03_surrogate_qaoa_landscape.py": [
             "data/processed/EIS/qaoa_landscapes/hBN_surrogate_slice.csv",
@@ -73,3 +80,21 @@ def test_eis_scripts_write_outputs_in_temporary_project(tmp_path: Path) -> None:
     qaoa_output = project / "data" / "processed" / "EIS" / "qaoa_landscapes"
     assert not list(qaoa_output.glob("Figure_12*.csv"))
     assert not (qaoa_output / "hBN_qaoa_summary.csv").exists()
+
+    classical_parameters = project / "data" / "processed" / "EIS" / "classical_fit" / "hBN_EIS_final_fit_parameters.csv"
+    with classical_parameters.open(newline="", encoding="utf-8") as f:
+        assert next(csv.reader(f)) == ["Parameter", "Value", "Unit", "Meaning"]
+
+    quantum_deviations = project / "data" / "processed" / "EIS" / "quantum_branches" / "hBN_parameter_deviations.csv"
+    with quantum_deviations.open(newline="", encoding="utf-8") as f:
+        assert next(csv.reader(f)) == [
+            "Parameter",
+            "Classical",
+            "Continuous_branch",
+            "Discrete_branch",
+            "Absolute_deviation_continuous",
+            "Absolute_deviation_discrete",
+            "Relative_deviation_continuous_percent",
+            "Relative_deviation_discrete_percent",
+            "Unit",
+        ]
