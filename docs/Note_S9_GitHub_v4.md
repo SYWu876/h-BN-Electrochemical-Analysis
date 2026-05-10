@@ -1,20 +1,21 @@
 # Note S9. GitHub package organization, file inventory, and reproducibility scope
 
-This package accompanies the manuscript **"Structure-Guided Emergent Interfacial Electrochemistry in Liquid-Phase-Processed h-BN"** and is organized as a GitHub-ready companion archive. It collects the raw measurement files, processed CSV outputs, repository metadata, licensing files, smoke tests, CI configuration, and lightweight analysis scripts needed to document the structure-guided CV, GCD, and EIS workflow used in the manuscript and Supporting Information.
+This package accompanies the manuscript **"Structure-Guided Emergent Interfacial Electrochemistry in Liquid-Phase-Processed h-BN"** and is organized as a GitHub-ready companion archive. It collects the raw measurement files, processed CSV outputs, repository metadata, licensing files, smoke tests, CI configuration, and analysis scripts needed to document the TEM, Raman, XPS, CV, GCD, and EIS workflows used in the manuscript and Supporting Information.
 
 ## Included content
 
 The archive contains four main groups of materials:
 
 1. **Raw data** in `data/raw/` for TEM, Raman, XPS, CV, GCD, and EIS.
-2. **Processed data** in `data/processed/` for CV descriptors, CV segmentation/Q-KPCA outputs, GCD bounded-fit summaries, and classical/quantum EIS tables.
+2. **Processed data** in `data/processed/` for TEM descriptors, Raman line-shape tables, XPS profile/descriptor tables, CV descriptors, CV segmentation/Q-KPCA outputs, GCD bounded-fit summaries, and classical/quantum EIS tables.
 3. **Repository support files** including citation metadata, license files, smoke tests, CI configuration, file inventory, and integrity hashes.
-4. **Reusable scripts** in `scripts/` for rebuilding selected EIS fitting, quantum-branch comparison, surrogate, and QAOA landscape tables.
+4. **Reusable scripts** in `scripts/` for rebuilding selected TEM, Raman, XPS, CV, GCD, and EIS outputs.
 
 ## Reproducibility scope
 
 This package is designed primarily as a transparent numerical and graphical archive.
 
+- The **TEM/Raman/XPS** workflows are represented by raw inputs, processed descriptor/profile tables, and domain-specific reproducibility scripts under `scripts/tem/`, `scripts/raman/`, and `scripts/xps/`.
 - The **CV** branch is represented by raw and processed CSV tables that support rate-dependent scaling, `b`-value analysis, Dunn separation, Ising-type segmentation, and Q-KPCA embedding.
 - The **GCD** branch is represented by raw traces, preprocessing diagnostics, bounded-fit summaries, bootstrap outputs, and residual tables supporting the stable-window workflow.
 - The **EIS** branch includes both the raw spectrum and executable scripts that regenerate selected classical-fit, quantum-branch-comparison, surrogate-slice, and QAOA-landscape CSV products.
