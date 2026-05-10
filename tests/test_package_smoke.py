@@ -179,3 +179,24 @@ def test_full_shared_objective_pipeline_writes_manuscript_slices(tmp_path: Path)
             "normalized_y",
             "surrogate_energy",
         ]
+
+
+def test_full_shared_objective_pipeline_rejects_invalid_cli_values(tmp_path: Path) -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "04_eis_shared_objective_full_pipeline.py"),
+            "--input",
+            str(ROOT / "data" / "raw" / "EIS" / "hbn_EIS_1.csv"),
+            "--output",
+            str(tmp_path / "outputs"),
+            "--bits-per-parameter",
+            "0",
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "--bits-per-parameter" in result.stderr
+    assert "must be greater than 0" in result.stderr
