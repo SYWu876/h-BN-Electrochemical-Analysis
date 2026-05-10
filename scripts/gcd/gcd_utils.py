@@ -453,20 +453,31 @@ def plot_fit_panel(diag: pd.DataFrame, j_value: int, p_best: np.ndarray,
     plt.close(fig)
     return png, pdf
 
-def plot_fit_summary(summary: pd.DataFrame, output_dir: str | Path) -> tuple[Path, Path]:
+def plot_fit_summary(summary: pd.DataFrame, output_dir: str | Path, table_s3_path: str | Path | None = None) -> tuple[Path, Path]:
     setup_matplotlib()
     output_dir = Path(output_dir)
 
-    Jvals = summary["J_A_g"].to_numpy()
-    Cmean = summary["Csp_boot_mean_F_g"].to_numpy()
-    Clo = summary["Csp_CI_low_F_g"].to_numpy()
-    Chi = summary["Csp_CI_high_F_g"].to_numpy()
-    Rmean = summary["Rs_boot_mean_ohm_g"].to_numpy()
-    Rlo = summary["Rs_CI_low_ohm_g"].to_numpy()
-    Rhi = summary["Rs_CI_high_ohm_g"].to_numpy()
+    use_table_s3 = table_s3_path is not None and Path(table_s3_path).exists()
+    if use_table_s3:
+        table_s3 = pd.read_csv(table_s3_path)
+        Jvals = table_s3["J_A_g^-1"].to_numpy()
+        Cmean = table_s3["Csp_base_F_g^-1"].to_numpy()
+        Clo = table_s3["Csp_CI2.5_F_g^-1"].to_numpy()
+        Chi = table_s3["Csp_CI97.5_F_g^-1"].to_numpy()
+        Rmean = table_s3["Rs_base_ohm"].to_numpy()
+        Rlo = None
+        Rhi = None
+    else:
+        Jvals = summary["J_A_g"].to_numpy()
+        Cmean = summary["Csp_boot_mean_F_g"].to_numpy()
+        Clo = summary["Csp_CI_low_F_g"].to_numpy()
+        Chi = summary["Csp_CI_high_F_g"].to_numpy()
+        Rmean = summary["Rs_boot_mean_ohm_g"].to_numpy()
+        Rlo = summary["Rs_CI_low_ohm_g"].to_numpy()
+        Rhi = summary["Rs_CI_high_ohm_g"].to_numpy()
 
-    png = output_dir / "hBN_Figure6f_Csp_Rs_vs_J_replot.png"
-    pdf = output_dir / "hBN_Figure6f_Csp_Rs_vs_J_replot.pdf"
+    png = output_dir / "hBN_Figure6f_Csp_Rs_vs_J.png"
+    pdf = output_dir / "hBN_Figure6f_Csp_Rs_vs_J.pdf"
 
     fig, ax1 = plt.subplots(figsize=(6.0, 4.4), dpi=300)
     c1 = "blue"
@@ -479,22 +490,27 @@ def plot_fit_summary(summary: pd.DataFrame, output_dir: str | Path) -> tuple[Pat
     ax1.set_xlabel(r"Current density $J$ (A g$^{-1}$)", fontsize=15)
     ax1.set_ylabel(r"$C_{\mathrm{sp}}$ (F g$^{-1}$)", fontsize=15, color=c1)
     ax1.tick_params(axis="y", colors=c1)
-    ax1.set_ylim(60, 325)
     style_axes(ax1)
 
     c2 = "red"
     ax2 = ax1.twinx()
-    ax2.errorbar(
-        Jvals, Rmean,
-        yerr=[Rmean - Rlo, Rhi - Rmean],
-        marker="s", linewidth=1.6, capsize=3, color=c2,
-        label=r"$R_{\mathrm{s}}$",
-    )
-    ax2.set_ylabel(r"$R_{\mathrm{s}}$ ($\Omega$ g)", fontsize=15, color=c2)
+    if Rlo is None or Rhi is None:
+        ax2.plot(
+            Jvals, Rmean,
+            marker="s", linewidth=1.6, color=c2,
+            label=r"$R_{\mathrm{s}}$",
+        )
+    else:
+        ax2.errorbar(
+            Jvals, Rmean,
+            yerr=[Rmean - Rlo, Rhi - Rmean],
+            marker="s", linewidth=1.6, capsize=3, color=c2,
+            label=r"$R_{\mathrm{s}}$",
+        )
+    ax2.set_ylabel(r"$R_{\mathrm{s}}$ ($\Omega$)", fontsize=15, color=c2)
     ax2.tick_params(axis="y", colors=c2, direction="in", top=True, right=True, length=5, width=1.1, pad=4)
     ax2.tick_params(which="minor", axis="y", colors=c2, direction="in", top=True, right=True, length=2.8, width=0.8)
     ax2.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax2.set_ylim(0.003, 0.014)
 
     lines = ax1.get_lines() + ax2.get_lines()
     ax1.legend(lines[:2], [r"$C_{\mathrm{sp}}$", r"$R_{\mathrm{s}}$"], frameon=True, fontsize=10, loc="best")

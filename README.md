@@ -80,7 +80,7 @@ CSV tables prepared for plotting, fitting summaries, and manuscript-linked inter
 
 - `CV/`: descriptor tables, log(i)-log(v) outputs, Dunn-separation products, and figure-facing CV summaries
 - `CV_segmentation/`: Ising-type local-field labels, transition points, and Q-KPCA outputs
-- `GCD/`: bounded-fit summaries, residual tables, bootstrap outputs, diagnostics, and summary tables
+- `GCD/`: bounded-fit summaries, residual tables, bootstrap outputs, diagnostics, and the final Table S3 manuscript summary
 - `EIS/classical_fit/`: final compact-circuit fit, fitted parameters, and residuals
 - `EIS/quantum_branches/`: branch parameters, metrics, overlays, and deviations
 - `EIS/qaoa_landscapes/`: surrogate slices and coarse/refined QAOA landscape tables
@@ -133,7 +133,7 @@ The study is organized around structural/spectroscopic inputs and three electroc
 
 - **TEM/Raman/XPS**: defect heterogeneity, lattice/patch descriptors, Raman line-shape analysis, and corrected XPS profile/descriptor tables
 - **CV**: peak-current scaling, power-law `b`-value analysis, Dunn-type current separation, Ising-type kinetic segmentation, and Q-KPCA embedding
-- **GCD**: preprocessing diagnostics, QAOA-based stable-window selection, bounded physics-informed fitting, and bootstrap/residual summaries
+- **GCD**: preprocessing diagnostics, QAOA-based stable-window selection, bounded physics-informed fitting, final Table S3 summary, and auto-scaled Figure 6f regeneration
 - **EIS**: compact classical anchor fit and comparison with continuous and discrete quantum-assisted inference under a shared complex-domain objective
 
 The full file-to-analysis mapping is listed in `docs/manifest.csv`.

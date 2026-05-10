@@ -57,6 +57,7 @@ def test_integrated_domain_archive_files_are_present() -> None:
         "data/processed/CV/Figure2c_peak_summary.csv",
         "data/processed/GCD/diagnostics/hBN_GCD_J1_processed_diagnostics.csv",
         "data/processed/GCD/tables/hBN_GCD_fit_summary_J1_to_J5.csv",
+        "data/processed/GCD/tables/Table_S3_hBN_GCD_bounded_fit_summary_final.csv",
         "data/processed/Raman/raman_fit_summary.csv",
         "data/processed/TEM/Table_1_TEM_descriptors.csv",
         "data/processed/XPS/Table_X_13_peaks.csv",
