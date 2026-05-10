@@ -444,8 +444,8 @@ def analyze_single_roi(roi_name: str, img: np.ndarray) -> ROIResult:
 
 
 def results_to_tables(results: Sequence[ROIResult], geometric_eps: float) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-    if geometric_eps <= 0:
-        raise ValueError("geometric_eps must be greater than 0")
+    if not np.isfinite(geometric_eps) or geometric_eps <= 0:
+        raise ValueError("geometric_eps must be a finite value greater than 0")
 
     df = pd.DataFrame(
         {
