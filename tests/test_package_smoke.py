@@ -124,23 +124,24 @@ def test_package_excludes_cache_and_os_metadata() -> None:
 
 
 def test_tem_pipeline_rejects_invalid_geometric_eps(tmp_path: Path) -> None:
-    result = subprocess.run(
-        [
-            sys.executable,
-            str(ROOT / "scripts" / "tem" / "00_tem_patch_ensemble_analysis.py"),
-            "--geometric-eps",
-            "0",
-            "--output-dir",
-            str(tmp_path / "tem"),
-        ],
-        capture_output=True,
-        text=True,
-        timeout=SCRIPT_TIMEOUT_SECONDS,
-    )
+    for invalid_eps in ("0", "-0.1", "nan", "inf"):
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "tem" / "00_tem_patch_ensemble_analysis.py"),
+                "--geometric-eps",
+                invalid_eps,
+                "--output-dir",
+                str(tmp_path / f"tem-{invalid_eps}"),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=SCRIPT_TIMEOUT_SECONDS,
+        )
 
-    assert result.returncode != 0
-    assert "--geometric-eps" in result.stderr
-    assert "must be greater than 0" in result.stderr
+        assert result.returncode != 0
+        assert "--geometric-eps" in result.stderr
+        assert "must be a positive finite float" in result.stderr
 
 
 def test_eis_scripts_write_outputs_in_temporary_project(tmp_path: Path) -> None:
