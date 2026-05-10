@@ -9,9 +9,17 @@ least-squares fit of the compact non-ideal circuit,
 
     Z(w) = Rs + j*w*L + (Rct || CPE1) + CPE2,
 
-builds a local quadratic surrogate around the classical anchor in normalized
-parameter space, discretizes that local trust region using 3 bits per parameter,
-maps the surrogate to a QUBO/Ising-style binary objective, exports a QAOA-compatible angle landscape, decodes the best bitstring, and exports spectra, tables, surrogate slices, landscape tables, and decoded results. By default, the landscape uses a fast lightweight proxy distribution suitable for repository reproducibility; an exact but slower statevector p=1 option is available with --exact-statevector-qaoa.
+builds a local quadratic surrogate around the classical anchor in latent
+parameter space (log coordinates for positive parameters and logit coordinates
+for alpha values), discretizes that local trust region using 3 bits per
+parameter, maps the surrogate to a QUBO/Ising-style binary objective, exports a
+QAOA-compatible angle landscape, decodes the best bitstring, and exports
+spectra, tables, surrogate slices, landscape tables, and decoded results. The
+exported slice columns named normalized_x/y are local latent displacements kept
+for compatibility with the release package. By default, the landscape uses a
+fast lightweight proxy distribution suitable for repository reproducibility; an
+exact but slower statevector p=1 option is available with
+--exact-statevector-qaoa.
 
 The script is intentionally self-contained and transparent. It is intended for
 reproducibility and review, not for claiming quantum advantage.
@@ -46,6 +54,27 @@ import matplotlib.pyplot as plt
 PARAM_NAMES = ["Rs", "L", "Rct", "Q1", "alpha1", "Q2", "alpha2"]
 LOG_PARAMS = {"Rs", "L", "Rct", "Q1", "Q2"}
 ALPHA_PARAMS = {"alpha1", "alpha2"}
+
+
+def positive_float(value: str) -> float:
+    parsed = float(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be greater than 0")
+    return parsed
+
+
+def positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be greater than 0")
+    return parsed
+
+
+def bits_per_parameter(value: str) -> int:
+    parsed = positive_int(value)
+    if parsed > 3:
+        raise argparse.ArgumentTypeError("must be between 1 and 3 for this lightweight release pipeline")
+    return parsed
 
 
 def read_eis_csv(path: Path) -> pd.DataFrame:
@@ -86,6 +115,8 @@ def circuit_impedance(params: Sequence[float], freq_hz: np.ndarray) -> np.ndarra
 
 def physical_to_latent(params: Sequence[float]) -> np.ndarray:
     """Map physical parameters to unconstrained latent coordinates."""
+    if len(params) != len(PARAM_NAMES):
+        raise ValueError(f"Expected {len(PARAM_NAMES)} physical parameters, got {len(params)}")
     x = []
     for name, value in zip(PARAM_NAMES, params):
         if name in LOG_PARAMS:
@@ -100,6 +131,8 @@ def physical_to_latent(params: Sequence[float]) -> np.ndarray:
 
 def latent_to_physical(x: Sequence[float]) -> np.ndarray:
     """Map unconstrained latent coordinates to physical parameters."""
+    if len(x) != len(PARAM_NAMES):
+        raise ValueError(f"Expected {len(PARAM_NAMES)} latent coordinates, got {len(x)}")
     out = []
     for name, value in zip(PARAM_NAMES, x):
         if name in LOG_PARAMS:
@@ -112,6 +145,8 @@ def latent_to_physical(x: Sequence[float]) -> np.ndarray:
             else:
                 z = np.exp(value)
                 out.append(float(z / (1.0 + z)))
+        else:
+            raise ValueError(name)
     return np.array(out, dtype=float)
 
 
@@ -283,14 +318,11 @@ def lattice_indices_to_bitstring(indices: Sequence[int], bits: int) -> str:
     return " ".join(pieces)
 
 
-def all_binary_level_indices(n_params: int, bits: int) -> np.ndarray:
-    """Return array shape (2^(n_params*bits), n_params) of decoded level indices."""
-    nbits = n_params * bits
-    nstates = 1 << nbits
-    states = np.arange(nstates, dtype=np.uint32)
-    decoded = np.zeros((nstates, n_params), dtype=np.int16)
+def decode_state_level_indices(states: np.ndarray, n_params: int, bits: int) -> np.ndarray:
+    """Decode integer bitstring states to lattice-level indices in bounded chunks."""
+    decoded = np.zeros((states.size, n_params), dtype=np.int16)
     for p in range(n_params):
-        val = np.zeros(nstates, dtype=np.int16)
+        val = np.zeros(states.size, dtype=np.int16)
         for b in range(bits):
             bit_pos = p * bits + b
             val += (((states >> bit_pos) & 1).astype(np.int16) << b)
@@ -298,12 +330,23 @@ def all_binary_level_indices(n_params: int, bits: int) -> np.ndarray:
     return decoded
 
 
-def diagonal_surrogate_energies(c: float, g: np.ndarray, H: np.ndarray, levels: np.ndarray, bits: int) -> np.ndarray:
-    """Compute diagonal energies for every bitstring state."""
-    decoded = all_binary_level_indices(len(g), bits)
-    y = levels[decoded]
-    E = surrogate_energy(y, c, g, H)
-    return np.asarray(E, dtype=np.float64)
+def diagonal_surrogate_energies(
+    c: float, g: np.ndarray, H: np.ndarray, levels: np.ndarray, bits: int, chunk_size: int = 200000
+) -> np.ndarray:
+    """Compute diagonal energies for every bitstring state with bounded peak memory."""
+    n_params = len(g)
+    nbits = n_params * bits
+    nstates = 1 << nbits
+    energies = np.empty(nstates, dtype=np.float64)
+
+    for start in range(0, nstates, chunk_size):
+        stop = min(start + chunk_size, nstates)
+        states = np.arange(start, stop, dtype=np.uint64)
+        decoded = decode_state_level_indices(states, n_params, bits)
+        y = levels[decoded]
+        energies[start:stop] = surrogate_energy(y, c, g, H)
+
+    return energies
 
 
 def apply_rx_all_qubits(state: np.ndarray, beta: float, nbits: int) -> np.ndarray:
@@ -565,15 +608,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Shared-objective h-BN EIS classical + surrogate + QAOA pipeline")
     parser.add_argument("--input", required=True, type=Path, help="Raw EIS CSV file")
     parser.add_argument("--output", required=True, type=Path, help="Output directory")
-    parser.add_argument("--trust-delta", type=float, default=0.08, help="Trust-region half-width in latent coordinates")
-    parser.add_argument("--fd-step", type=float, default=0.015, help="Finite-difference step for surrogate Hessian")
-    parser.add_argument("--bits-per-parameter", type=int, default=3, help="Binary discretization per parameter")
-    parser.add_argument("--qaoa-grid", type=int, default=9, help="Number of gamma and beta grid points")
-    parser.add_argument("--shots", type=int, default=4096, help="Shot count for sampling best QAOA/proxy bitstring")
+    parser.add_argument("--trust-delta", type=positive_float, default=0.08, help="Trust-region half-width in latent coordinates")
+    parser.add_argument("--fd-step", type=positive_float, default=0.015, help="Finite-difference step for surrogate Hessian")
+    parser.add_argument("--bits-per-parameter", type=bits_per_parameter, default=3, help="Binary discretization per parameter, from 1 to 3 in this release script")
+    parser.add_argument("--qaoa-grid", type=positive_int, default=9, help="Number of gamma and beta grid points")
+    parser.add_argument("--shots", type=positive_int, default=4096, help="Shot count for sampling best QAOA/proxy bitstring")
     parser.add_argument("--skip-qaoa", action="store_true", help="Skip QAOA/proxy landscape and use lattice minimum only")
     parser.add_argument("--exact-statevector-qaoa", action="store_true", help="Use exact p=1 statevector QAOA. This is slow for 21 qubits; default is a fast QAOA-compatible proxy landscape.")
     parser.add_argument("--seed", type=int, default=123, help="Random seed for QAOA shot sampling")
     args = parser.parse_args()
+
+    if not args.input.is_file():
+        parser.error(f"--input does not exist or is not a file: {args.input}")
 
     out_dir = args.output
     out_dir.mkdir(parents=True, exist_ok=True)
