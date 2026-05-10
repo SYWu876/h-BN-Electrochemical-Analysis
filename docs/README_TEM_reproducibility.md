@@ -6,7 +6,7 @@ SYWu876/h-BN-Electrochemical-Analysis
 
 ## Included contents
 
-- `scripts/00_tem_patch_ensemble_analysis.py`
+- `scripts/tem/00_tem_patch_ensemble_analysis.py`
   Rebuilds the TEM descriptor workflow for the five-patch ensemble analysis.
 - `data/raw/TEM/OneView 200kV 800kX 39972.jpg`
   Raw TEM image used for ROI cropping.
@@ -32,7 +32,7 @@ Place ROI images in:
 
 Example:
 ```bash
-python scripts/00_tem_patch_ensemble_analysis.py \
+python scripts/tem/00_tem_patch_ensemble_analysis.py \
     --repo-root . \
     --roi-dir data/raw/TEM/rois
 ```
@@ -43,7 +43,7 @@ Prepare ROI boxes in:
 
 Example:
 ```bash
-python scripts/00_tem_patch_ensemble_analysis.py \
+python scripts/tem/00_tem_patch_ensemble_analysis.py \
     --repo-root . \
     --source-image "data/raw/TEM/OneView 200kV 800kX 39972.jpg" \
     --roi-csv data/raw/TEM/roi_boxes_template.csv
