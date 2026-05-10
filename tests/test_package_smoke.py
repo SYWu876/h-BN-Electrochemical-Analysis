@@ -36,6 +36,7 @@ def test_readme_and_citation_contact_email_match() -> None:
     assert "scripts/raman/" in readme_text
     assert "scripts/tem/" in readme_text
     assert "scripts/xps/" in readme_text
+    assert "scripts/integrated/" in readme_text
     assert "All EIS surrogate slices used in the manuscript can be regenerated" in readme_text
     assert "R1_Q1_slice.csv" in readme_text
     assert "Rs_alpha1_slice.csv" in readme_text
@@ -51,6 +52,7 @@ def test_integrated_domain_archive_files_are_present() -> None:
     expected_paths = [
         "scripts/cv/00_run_all_cv_analysis.py",
         "scripts/gcd/00_run_all_gcd_analysis.py",
+        "scripts/integrated/00_build_cross_domain_evidence.py",
         "scripts/raman/01_raman_analysis_pipeline.py",
         "scripts/tem/00_tem_patch_ensemble_analysis.py",
         "scripts/xps/04_run_xps_pipeline.py",
@@ -58,6 +60,10 @@ def test_integrated_domain_archive_files_are_present() -> None:
         "data/processed/GCD/diagnostics/hBN_GCD_J1_processed_diagnostics.csv",
         "data/processed/GCD/tables/hBN_GCD_fit_summary_J1_to_J5.csv",
         "data/processed/GCD/tables/Table_S3_hBN_GCD_bounded_fit_summary_final.csv",
+        "data/processed/integrated/hBN_cross_domain_descriptor_long.csv",
+        "data/processed/integrated/hBN_cross_domain_heatmap_matrix.csv",
+        "data/processed/integrated/hBN_cross_domain_pca_projection.csv",
+        "data/processed/integrated/hBN_cross_domain_pca_loadings.csv",
         "data/processed/Raman/raman_fit_summary.csv",
         "data/processed/TEM/Table_1_TEM_descriptors.csv",
         "data/processed/XPS/Table_X_13_peaks.csv",
@@ -100,6 +106,27 @@ def test_integrated_domain_archive_files_are_present() -> None:
             "geometric_patch_weight_wi",
         ]
 
+    with (ROOT / "data" / "processed" / "integrated" / "hBN_cross_domain_descriptor_long.csv").open(
+        newline="", encoding="utf-8"
+    ) as f:
+        assert next(csv.reader(f)) == ["domain", "descriptor", "value", "unit", "source_path", "note"]
+
+    with (ROOT / "data" / "processed" / "integrated" / "hBN_cross_domain_heatmap_matrix.csv").open(
+        newline="", encoding="utf-8"
+    ) as f:
+        assert next(csv.reader(f)) == ["domain", "descriptor_1", "descriptor_2", "descriptor_3", "descriptor_4"]
+
+    with (ROOT / "data" / "processed" / "integrated" / "hBN_cross_domain_pca_projection.csv").open(
+        newline="", encoding="utf-8"
+    ) as f:
+        assert next(csv.reader(f)) == [
+            "domain",
+            "PC1",
+            "PC2",
+            "explained_variance_ratio_PC1",
+            "explained_variance_ratio_PC2",
+        ]
+
     assert not (ROOT / "data" / "raw" / "Raman" / "hBN-3(1).txt").exists()
     assert not (ROOT / "data" / "raw" / "XPS" / "HBN(1).xls").exists()
     tem_image = ROOT / "data" / "raw" / "TEM" / "OneView 200kV 800kX 39972.jpg"
@@ -122,6 +149,7 @@ def test_package_excludes_cache_and_os_metadata() -> None:
         assert path.name not in forbidden_names, path.as_posix()
         assert not path.name.startswith("._"), path.as_posix()
         assert path.suffix != ".pyc", path.as_posix()
+        assert not path.as_posix().startswith("outputs/figures/integrated/"), path.as_posix()
 
 
 def test_tem_pipeline_rejects_invalid_geometric_eps(tmp_path: Path) -> None:

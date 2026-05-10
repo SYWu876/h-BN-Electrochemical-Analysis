@@ -81,6 +81,7 @@ CSV tables prepared for plotting, fitting summaries, and manuscript-linked inter
 - `CV/`: descriptor tables, log(i)-log(v) outputs, Dunn-separation products, and figure-facing CV summaries
 - `CV_segmentation/`: Ising-type local-field labels, transition points, and Q-KPCA outputs
 - `GCD/`: bounded-fit summaries, residual tables, bootstrap outputs, diagnostics, and the final Table S3 manuscript summary
+- `integrated/`: conservative cross-domain descriptor tables for multi-modal evidence visualization
 - `EIS/classical_fit/`: final compact-circuit fit, fitted parameters, and residuals
 - `EIS/quantum_branches/`: branch parameters, metrics, overlays, and deviations
 - `EIS/qaoa_landscapes/`: surrogate slices and coarse/refined QAOA landscape tables
@@ -90,7 +91,7 @@ CSV tables prepared for plotting, fitting summaries, and manuscript-linked inter
 
 ### `scripts/`
 
-Python scripts included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. EIS scripts remain at the top level because they are the manuscript's quantum-assisted comparison branch.
+Python scripts included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. Cross-domain evidence tables are rebuilt from `scripts/integrated/`. EIS scripts remain at the top level because they are the manuscript's quantum-assisted comparison branch.
 
 The first three EIS scripts are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
 
@@ -119,6 +120,7 @@ python scripts/raman/01_raman_analysis_pipeline.py
 python scripts/raman/02_plot_raman_ns14d_schematic.py
 python scripts/tem/00_tem_patch_ensemble_analysis.py --repo-root . --source-image "data/raw/TEM/OneView 200kV 800kX 39972.jpg" --roi-csv data/raw/TEM/roi_boxes_template.csv
 python scripts/xps/04_run_xps_pipeline.py
+python scripts/integrated/00_build_cross_domain_evidence.py --repo-root .
 python scripts/01_eis_classical_anchor_fit.py
 python scripts/02_eis_quantum_comparison_from_anchor.py
 python scripts/03_eis_surrogate_qaoa_landscape.py
@@ -135,6 +137,7 @@ The study is organized around structural/spectroscopic inputs and three electroc
 - **CV**: peak-current scaling, power-law `b`-value analysis, Dunn-type current separation, Ising-type kinetic segmentation, and Q-KPCA embedding
 - **GCD**: preprocessing diagnostics, QAOA-based stable-window selection, bounded physics-informed fitting, final Table S3 summary, and auto-scaled Figure 6f regeneration
 - **EIS**: compact classical anchor fit and comparison with continuous and discrete quantum-assisted inference under a shared complex-domain objective
+- **Integrated evidence**: conservative descriptor matrix, heatmap table, and exploratory PCA projection assembled only from committed processed tables
 
 The full file-to-analysis mapping is listed in `docs/manifest.csv`.
 
