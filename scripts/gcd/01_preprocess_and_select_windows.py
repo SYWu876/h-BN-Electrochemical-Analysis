@@ -8,6 +8,9 @@ DIAG_DIR = ROOT / "data" / "processed" / "GCD" / "diagnostics"
 FIG_DIR = ROOT / "outputs" / "figures" / "GCD"
 
 def main():
+    DIAG_DIR.mkdir(parents=True, exist_ok=True)
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
+
     for j in JS:
         t_full, v_full = load_gcd_pair(RAW, j)
         t_dis, v_dis = extract_discharge_branch(t_full, v_full)
