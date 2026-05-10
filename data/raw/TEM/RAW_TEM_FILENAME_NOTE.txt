@@ -1,0 +1,4 @@
+Expected raw TEM filename:
+OneView 200kV 800kX 39972.jpg
+Expected path:
+data/raw/TEM/OneView 200kV 800kX 39972.jpg

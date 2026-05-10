@@ -31,14 +31,66 @@ def test_readme_and_citation_contact_email_match() -> None:
     assert "scripts/02_eis_quantum_comparison_from_anchor.py" in readme_text
     assert "scripts/03_eis_surrogate_qaoa_landscape.py" in readme_text
     assert "scripts/04_eis_shared_objective_full_pipeline.py" in readme_text
+    assert "scripts/cv/" in readme_text
+    assert "scripts/gcd/" in readme_text
+    assert "scripts/raman/" in readme_text
+    assert "scripts/tem/" in readme_text
+    assert "scripts/xps/" in readme_text
     assert "All EIS surrogate slices used in the manuscript can be regenerated" in readme_text
     assert "R1_Q1_slice.csv" in readme_text
     assert "Rs_alpha1_slice.csv" in readme_text
 
 
 def test_analysis_scripts_compile(tmp_path: Path) -> None:
-    for script in sorted((ROOT / "scripts").glob("*.py")):
-        py_compile.compile(str(script), cfile=str(tmp_path / f"{script.stem}.pyc"), doraise=True)
+    for script in sorted((ROOT / "scripts").rglob("*.py")):
+        pyc_name = f"{script.relative_to(ROOT).as_posix().replace('/', '__')}.pyc"
+        py_compile.compile(str(script), cfile=str(tmp_path / pyc_name), doraise=True)
+
+
+def test_integrated_domain_archive_files_are_present() -> None:
+    expected_paths = [
+        "scripts/cv/00_run_all_cv_analysis.py",
+        "scripts/gcd/00_run_all_gcd_analysis.py",
+        "scripts/raman/01_raman_analysis_pipeline.py",
+        "scripts/tem/00_tem_patch_ensemble_analysis.py",
+        "scripts/xps/04_run_xps_pipeline.py",
+        "data/processed/CV/Figure2c_peak_summary.csv",
+        "data/processed/GCD/diagnostics/hBN_GCD_J1_processed_diagnostics.csv",
+        "data/processed/GCD/tables/hBN_GCD_fit_summary_J1_to_J5.csv",
+        "data/processed/Raman/raman_fit_summary.csv",
+        "data/processed/TEM/Table_1_TEM_descriptors.csv",
+        "data/processed/XPS/Table_X_13_peaks.csv",
+        "data/raw/TEM/roi_boxes_template.csv",
+        "data/raw/XPS/HBN.xlsx",
+        "docs/Note_S7_Raman_GitHub.md",
+        "docs/README_TEM_reproducibility.md",
+        "docs/XPS_REPRODUCIBILITY_NOTES.md",
+    ]
+    for path in expected_paths:
+        artifact = ROOT / path
+        assert artifact.exists(), path
+        assert artifact.stat().st_size > 0, path
+
+    assert not (ROOT / "data" / "raw" / "Raman" / "hBN-3(1).txt").exists()
+    assert not (ROOT / "data" / "raw" / "XPS" / "HBN(1).xls").exists()
+    assert (ROOT / "data" / "raw" / "TEM" / "OneView 200kV 800kX 39972.jpg").stat().st_size == 4688772
+
+
+def test_package_excludes_cache_and_os_metadata() -> None:
+    result = subprocess.run(
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=SCRIPT_TIMEOUT_SECONDS,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    paths = [Path(line) for line in result.stdout.splitlines() if line.strip()]
+    forbidden_names = {".DS_Store", "__MACOSX", "__pycache__"}
+    for path in paths:
+        assert path.name not in forbidden_names, path.as_posix()
+        assert not path.name.startswith("._"), path.as_posix()
+        assert path.suffix != ".pyc", path.as_posix()
 
 
 def test_eis_scripts_write_outputs_in_temporary_project(tmp_path: Path) -> None:
