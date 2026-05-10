@@ -40,11 +40,7 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 import numpy as np
 import pandas as pd
 from scipy.optimize import least_squares
-
-try:
-    import matplotlib.pyplot as plt
-except Exception:  # pragma: no cover
-    plt = None
+import matplotlib.pyplot as plt
 
 
 PARAM_NAMES = ["Rs", "L", "Rct", "Q1", "alpha1", "Q2", "alpha2"]
@@ -177,9 +173,9 @@ def fit_classical_anchor(freq_hz: np.ndarray, z_exp: np.ndarray) -> Tuple[np.nda
     return params, stats
 
 
-def normalized_to_latent(y: np.ndarray, x_anchor: np.ndarray, trust_delta: float) -> np.ndarray:
-    """Local normalized coordinate y in [-delta, delta] maps additively in latent space."""
-    return x_anchor + np.asarray(y, dtype=float)
+def local_displacement_to_latent(displacement: np.ndarray, x_anchor: np.ndarray) -> np.ndarray:
+    """Map a local latent-space displacement to absolute latent coordinates."""
+    return x_anchor + np.asarray(displacement, dtype=float)
 
 
 def build_quadratic_surrogate(
@@ -342,6 +338,24 @@ def qaoa_p1_expectation(diag_E: np.ndarray, gamma: float, beta: float) -> float:
     return float(np.dot(prob, diag_E))
 
 
+def scaled_proxy_energies(diag_E: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
+    E = np.asarray(diag_E, dtype=float)
+    Esc = E - E.min()
+    scale = np.std(Esc)
+    if scale > 0:
+        Esc = Esc / scale
+    return E, Esc, float(E.mean())
+
+
+def proxy_cost_distribution(scaled_E: np.ndarray, gamma: float) -> np.ndarray:
+    # stable softmin selected by gamma
+    logits = -float(gamma) * scaled_E
+    logits -= logits.max()
+    p_cost = np.exp(logits)
+    p_cost /= p_cost.sum()
+    return p_cost
+
+
 def proxy_qaoa_probabilities(diag_E: np.ndarray, gamma: float, beta: float) -> np.ndarray:
     """Fast QAOA-compatible proxy distribution over the binary lattice.
 
@@ -351,16 +365,8 @@ def proxy_qaoa_probabilities(diag_E: np.ndarray, gamma: float, beta: float) -> n
     cost selectivity and beta controls mixing with the uniform superposition.
     Use --exact-statevector-qaoa for an exact but slow calculation.
     """
-    E = np.asarray(diag_E, dtype=float)
-    Esc = E - E.min()
-    scale = np.std(Esc)
-    if scale > 0:
-        Esc = Esc / scale
-    # stable softmin selected by gamma
-    logits = -float(gamma) * Esc
-    logits -= logits.max()
-    p_cost = np.exp(logits)
-    p_cost /= p_cost.sum()
+    E, scaled_E, _ = scaled_proxy_energies(diag_E)
+    p_cost = proxy_cost_distribution(scaled_E, gamma)
     mix = math.sin(float(beta)) ** 2
     p = (1.0 - mix) * p_cost + mix / E.size
     return p / p.sum()
@@ -372,16 +378,34 @@ def evaluate_qaoa_landscape(
     gammas = np.linspace(0.0, gamma_max, grid)
     betas = np.linspace(0.0, beta_max, grid)
     rows = []
-    for gamma in gammas:
-        for beta in betas:
-            if exact:
+    if exact:
+        for gamma in gammas:
+            for beta in betas:
                 expE = qaoa_p1_expectation(diag_E, float(gamma), float(beta))
-                mode = "exact_statevector_p1"
-            else:
-                p = proxy_qaoa_probabilities(diag_E, float(gamma), float(beta))
-                expE = float(np.dot(p, diag_E))
-                mode = "fast_qaoa_compatible_proxy"
-            rows.append({"gamma": gamma, "beta": beta, "expected_surrogate_energy": expE, "mode": mode})
+                rows.append(
+                    {
+                        "gamma": gamma,
+                        "beta": beta,
+                        "expected_surrogate_energy": expE,
+                        "mode": "exact_statevector_p1",
+                    }
+                )
+    else:
+        E, scaled_E, uniform_expectation = scaled_proxy_energies(diag_E)
+        for gamma in gammas:
+            p_cost = proxy_cost_distribution(scaled_E, float(gamma))
+            cost_expectation = float(np.dot(p_cost, E))
+            for beta in betas:
+                mix = math.sin(float(beta)) ** 2
+                expE = (1.0 - mix) * cost_expectation + mix * uniform_expectation
+                rows.append(
+                    {
+                        "gamma": gamma,
+                        "beta": beta,
+                        "expected_surrogate_energy": expE,
+                        "mode": "fast_qaoa_compatible_proxy",
+                    }
+                )
     return pd.DataFrame(rows)
 
 
@@ -505,8 +529,6 @@ def export_surrogate_slices(out_dir: Path, c: float, g: np.ndarray, H: np.ndarra
 
 
 def make_plots(out_dir: Path) -> None:
-    if plt is None:
-        return
     spec = pd.read_csv(out_dir / "eis_fitted_spectra_classical_discrete.csv")
     plt.figure(figsize=(5.2, 4.6))
     plt.plot(spec["Zreal_exp_ohm"], spec["minus_Zimag_exp_ohm"], "o", ms=4, label="Raw EIS")
@@ -591,7 +613,7 @@ def main() -> None:
     levels = levels_for_bits(args.bits_per_parameter, args.trust_delta)
     best_indices, best_surrogate_E, best_linear_index = enumerate_lattice_minimum(c, g, H, levels)
     y_lattice = levels[best_indices]
-    lattice_params = latent_to_physical(normalized_to_latent(y_lattice, x_anchor, args.trust_delta))
+    lattice_params = latent_to_physical(local_displacement_to_latent(y_lattice, x_anchor))
 
     # Optional exact p=1 QAOA landscape.
     qaoa_best_state = None
@@ -607,7 +629,7 @@ def main() -> None:
         qaoa_counts.to_csv(out_dir / "qaoa_sampled_bitstrings.csv", index=False)
         qaoa_indices = state_index_to_lattice_indices(qaoa_best_state, len(PARAM_NAMES), args.bits_per_parameter)
         y_qaoa = levels[qaoa_indices]
-        qaoa_params = latent_to_physical(normalized_to_latent(y_qaoa, x_anchor, args.trust_delta))
+        qaoa_params = latent_to_physical(local_displacement_to_latent(y_qaoa, x_anchor))
         qaoa_surrogate_E = float(diag_E[qaoa_best_state])
         discrete_source = "p1_qaoa_sampled_best"
         discrete_indices = qaoa_indices
