@@ -182,6 +182,7 @@ def test_full_shared_objective_pipeline_writes_manuscript_slices(tmp_path: Path)
 
 
 def test_full_shared_objective_pipeline_rejects_invalid_cli_values(tmp_path: Path) -> None:
+    env = {**os.environ, "MPLBACKEND": "Agg"}
     result = subprocess.run(
         [
             sys.executable,
@@ -195,6 +196,8 @@ def test_full_shared_objective_pipeline_rejects_invalid_cli_values(tmp_path: Pat
         ],
         capture_output=True,
         text=True,
+        timeout=SCRIPT_TIMEOUT_SECONDS,
+        env=env,
     )
 
     assert result.returncode != 0
