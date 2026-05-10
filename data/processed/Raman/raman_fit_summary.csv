@@ -1,0 +1,2 @@
+raw_peak_max_cm-1,fit_center_cm-1,fwhm_cm-1,left_half_width_cm-1,right_half_width_cm-1,asymmetry_ratio_right_over_left,A,sigma,gamma,eta,als_lambda,als_p,als_niter,kmeans_k,segmentation_window_min_cm-1,segmentation_window_max_cm-1
+1367.15,1367.3254113074763,12.849999999999909,6.605411307476288,6.244588692523621,0.9453746938446856,1137.1444521030303,4.67515034080723,8.160863301168904,0.6745600808190296,10000000.0,0.01,20,3,1335.0,1395.0

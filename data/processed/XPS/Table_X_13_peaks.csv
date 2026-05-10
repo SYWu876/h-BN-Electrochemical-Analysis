@@ -1,0 +1,14 @@
+Region,Label,Center_eV,Area_fraction,Tentative_assignment
+B1s,B-def,189.87,0.2315,"lower-BE defect-related B environment, possibly B-rich / under-coordinated B"
+B1s,B–N,190.37,0.5727,main lattice B–N component of h-BN
+B1s,B-ox,191.09,0.1958,"high-BE defect / oxidized boron shoulder, such as B–Ox-related surface species"
+N1s,N-def,397.7,0.1785,defect-rich N / perturbed nitrogen environment
+N1s,N–B,398.0,0.6855,main lattice N–B component of h-BN
+N1s,N-ox,398.85,0.136,surface / oxidized N shoulder
+C1s,C–C,284.59,0.7161,C–C / C–H
+C1s,C–O,285.5,0.0967,C–N / C–O
+C1s,C=O,286.35,0.0923,C=O-related
+C1s,O–C=O,288.43,0.0949,O–C=O
+O1s,O-lat,530.37,0.0041,lattice / B–O-related O
+O1s,O-ads,532.6,0.7565,surface hydroxyl / adsorbed O
+O1s,H2O/O,533.34,0.2394,adsorbed H2O / weak oxygen species

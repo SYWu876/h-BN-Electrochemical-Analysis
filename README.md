@@ -9,8 +9,8 @@ The study treats liquid-phase-processed h-BN as a **structure-defined reference 
 This package is intended as a **GitHub-ready companion archive** for manuscript review, sharing, and later public release. It contains:
 
 - raw experimental files for **TEM, Raman, XPS, CV, GCD, and EIS**
-- processed CSV tables used to support the electrochemical analysis
-- lightweight Python scripts for rebuilding selected **EIS classical-fit, quantum-branch, and surrogate/QAOA CSV outputs**
+- processed CSV tables used to support structural, spectroscopic, and electrochemical analysis
+- Python scripts for rebuilding selected **TEM, Raman, XPS, CV, GCD, and EIS** outputs
 - repository metadata, license files, smoke tests, and CI configuration
 - a regenerated machine-readable file manifest and checksums for archive integrity
 
@@ -18,49 +18,53 @@ This package is intended as a **GitHub-ready companion archive** for manuscript 
 
 ```text
 hBN_GitHub_Package_final/
-├── README.md
-├── CITATION.cff
-├── LICENSE
-├── DATA_LICENSE.md
-├── NOTICE
-├── requirements.txt
-├── requirements-dev.txt
-├── .gitattributes
-├── .gitignore
-├── .github/
-│   └── workflows/
-├── data/
-│   ├── raw/
-│   │   ├── CV/
-│   │   ├── GCD/
-│   │   ├── EIS/
-│   │   ├── Raman/
-│   │   ├── TEM/
-│   │   └── XPS/
-│   └── processed/
-│       ├── CV/
-│       ├── CV_segmentation/
-│       ├── GCD/
-│       └── EIS/
-│           ├── classical_fit/
-│           ├── quantum_branches/
-│           └── qaoa_landscapes/
-├── scripts/
-│   ├── 01_eis_classical_anchor_fit.py
-│   ├── 02_eis_quantum_comparison_from_anchor.py
-│   ├── 03_eis_surrogate_qaoa_landscape.py
-│   └── 04_eis_shared_objective_full_pipeline.py
-├── tests/
-│   └── test_package_smoke.py
-└── docs/
-    ├── manifest.csv
-    ├── checksums.sha256
-    └── Note_S9_GitHub_v4.md
+|-- README.md
+|-- CITATION.cff
+|-- LICENSE
+|-- DATA_LICENSE.md
+|-- NOTICE
+|-- requirements.txt
+|-- requirements-dev.txt
+|-- data/
+|   |-- raw/
+|   |   |-- CV/
+|   |   |-- GCD/
+|   |   |-- EIS/
+|   |   |-- Raman/
+|   |   |-- TEM/
+|   |   `-- XPS/
+|   `-- processed/
+|       |-- CV/
+|       |-- CV_segmentation/
+|       |-- GCD/
+|       |-- EIS/
+|       |-- Raman/
+|       |-- TEM/
+|       `-- XPS/
+|-- scripts/
+|   |-- cv/
+|   |-- gcd/
+|   |-- raman/
+|   |-- tem/
+|   |-- xps/
+|   |-- 01_eis_classical_anchor_fit.py
+|   |-- 02_eis_quantum_comparison_from_anchor.py
+|   |-- 03_eis_surrogate_qaoa_landscape.py
+|   `-- 04_eis_shared_objective_full_pipeline.py
+|-- tests/
+`-- docs/
+    |-- manifest.csv
+    |-- checksums.sha256
+    |-- Note_S7_Raman_GitHub.md
+    |-- Note_S9_GitHub_v4.md
+    |-- README_TEM_reproducibility.md
+    `-- XPS_REPRODUCIBILITY_NOTES.md
 ```
 
 ## What is in each folder?
 
 ### `data/raw/`
+
 Original or source-level files used as inputs for analysis.
 
 - `CV/`: scan-rate-resolved cyclic voltammetry tables and Dunn-partition source tables
@@ -68,22 +72,27 @@ Original or source-level files used as inputs for analysis.
 - `EIS/`: raw impedance spectrum used for the classical and quantum-branch comparison
 - `Raman/`: raw Raman text export
 - `TEM/`: source TEM image plus ROI-level enhancement, FFT, lattice-map, and maxima-overlay files
-- `XPS/`: raw XPS spreadsheet export
+- `XPS/`: raw XPS workbook exports, including an `.xlsx` fallback for reproducible script execution
 
 ### `data/processed/`
+
 CSV tables prepared for plotting, fitting summaries, and manuscript-linked interpretation.
 
-- `CV/`: descriptor tables, log(i)-log(v) outputs, and Dunn-separation products
+- `CV/`: descriptor tables, log(i)-log(v) outputs, Dunn-separation products, and figure-facing CV summaries
 - `CV_segmentation/`: Ising-type local-field labels, transition points, and Q-KPCA outputs
-- `GCD/`: bounded-fit summaries, residual tables, and bootstrap outputs
+- `GCD/`: bounded-fit summaries, residual tables, bootstrap outputs, diagnostics, and summary tables
 - `EIS/classical_fit/`: final compact-circuit fit, fitted parameters, and residuals
 - `EIS/quantum_branches/`: branch parameters, metrics, overlays, and deviations
 - `EIS/qaoa_landscapes/`: surrogate slices and coarse/refined QAOA landscape tables
+- `Raman/`: baseline correction, peak fitting, and local spectral segmentation tables
+- `TEM/`: patch-ensemble descriptor tables for the TEM reproducibility workflow
+- `XPS/`: profile-fit summaries, adopted 13-peak table, and corrected descriptor matrix
 
 ### `scripts/`
-Minimal Python scripts included for rebuilding selected EIS data products distributed in `data/processed/EIS/` and running the full shared-objective EIS pipeline.
 
-The first three scripts are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
+Python scripts included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. EIS scripts remain at the top level because they are the manuscript's quantum-assisted comparison branch.
+
+The first three EIS scripts are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
 
 For the full EIS shared-objective workflow, use `04_eis_shared_objective_full_pipeline.py`. It starts from the raw EIS spectrum, performs the classical anchor fit, builds the local surrogate, evaluates the QAOA-compatible landscape, decodes the discrete branch, and writes the manuscript EIS surrogate slices, including `R1_Q1_slice.csv` and `Rs_alpha1_slice.csv`, to the selected output directory.
 
@@ -99,23 +108,30 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Rebuild the EIS outputs
+### 2. Rebuild selected outputs
 
 Run from the repository root:
 
 ```bash
+python scripts/cv/00_run_all_cv_analysis.py
+python scripts/gcd/00_run_all_gcd_analysis.py
+python scripts/raman/01_raman_analysis_pipeline.py
+python scripts/raman/02_plot_raman_ns14d_schematic.py
+python scripts/tem/00_tem_patch_ensemble_analysis.py --repo-root . --source-image "data/raw/TEM/OneView 200kV 800kX 39972.jpg" --roi-csv data/raw/TEM/roi_boxes_template.csv
+python scripts/xps/04_run_xps_pipeline.py
 python scripts/01_eis_classical_anchor_fit.py
 python scripts/02_eis_quantum_comparison_from_anchor.py
 python scripts/03_eis_surrogate_qaoa_landscape.py
 python scripts/04_eis_shared_objective_full_pipeline.py --input data/raw/EIS/hbn_EIS_1.csv --output outputs/eis_shared_objective
 ```
 
-The first three scripts write selected CSV outputs into the corresponding folders under `data/processed/EIS/`. The full shared-objective pipeline writes regenerated CSV and PNG outputs to the output directory specified with `--output`.
+The committed archive includes the manuscript-facing CSV tables. Generated figures and local rerun outputs are written to ignored output paths where possible, so they can be recreated locally without becoming part of the tracked archive.
 
 ## Manuscript-level analysis map
 
-The study is organized around three electrochemical branches:
+The study is organized around structural/spectroscopic inputs and three electrochemical branches:
 
+- **TEM/Raman/XPS**: defect heterogeneity, lattice/patch descriptors, Raman line-shape analysis, and corrected XPS profile/descriptor tables
 - **CV**: peak-current scaling, power-law `b`-value analysis, Dunn-type current separation, Ising-type kinetic segmentation, and Q-KPCA embedding
 - **GCD**: preprocessing diagnostics, QAOA-based stable-window selection, bounded physics-informed fitting, and bootstrap/residual summaries
 - **EIS**: compact classical anchor fit and comparison with continuous and discrete quantum-assisted inference under a shared complex-domain objective
@@ -125,6 +141,7 @@ The full file-to-analysis mapping is listed in `docs/manifest.csv`.
 ## Notes for public GitHub release
 
 - macOS metadata files have been removed from this final package
+- generated local figure/output folders are intentionally ignored
 - file inventory and integrity hashes are listed in `docs/manifest.csv` and `docs/checksums.sha256`; these integrity files intentionally omit themselves
 - repository licenses are included; before public release, you may additionally choose to add a repository DOI/Zenodo record
 

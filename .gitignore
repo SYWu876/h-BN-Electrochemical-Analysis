@@ -10,6 +10,9 @@ env/
 
 # Local generated reports
 ADVISOR_REPORT.*
+outputs/
+data/processed/**/*.png
+data/processed/**/*.pdf
 
 # OS/editor metadata
 .DS_Store
