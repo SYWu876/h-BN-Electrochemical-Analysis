@@ -183,22 +183,30 @@ def test_full_shared_objective_pipeline_writes_manuscript_slices(tmp_path: Path)
 
 def test_full_shared_objective_pipeline_rejects_invalid_cli_values(tmp_path: Path) -> None:
     env = {**os.environ, "MPLBACKEND": "Agg"}
-    result = subprocess.run(
-        [
-            sys.executable,
-            str(ROOT / "scripts" / "04_eis_shared_objective_full_pipeline.py"),
-            "--input",
-            str(ROOT / "data" / "raw" / "EIS" / "hbn_EIS_1.csv"),
-            "--output",
-            str(tmp_path / "outputs"),
-            "--bits-per-parameter",
-            "0",
-        ],
-        capture_output=True,
-        text=True,
-        timeout=SCRIPT_TIMEOUT_SECONDS,
-        env=env,
-    )
+    try:
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "04_eis_shared_objective_full_pipeline.py"),
+                "--input",
+                str(ROOT / "data" / "raw" / "EIS" / "hbn_EIS_1.csv"),
+                "--output",
+                str(tmp_path / "outputs"),
+                "--bits-per-parameter",
+                "0",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=SCRIPT_TIMEOUT_SECONDS,
+            env=env,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout or ""
+        stderr = exc.stderr or ""
+        raise AssertionError(
+            f"04_eis_shared_objective_full_pipeline.py invalid CLI check timed out after "
+            f"{SCRIPT_TIMEOUT_SECONDS} seconds\nstdout:\n{stdout}\n\nstderr:\n{stderr}"
+        ) from exc
 
     assert result.returncode != 0
     assert "--bits-per-parameter" in result.stderr
