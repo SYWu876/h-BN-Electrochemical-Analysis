@@ -675,8 +675,8 @@ def main() -> None:
     parser = build_arg_parser()
     args = parser.parse_args()
 
-    if args.geometric_eps <= 0:
-        parser.error("--geometric-eps must be greater than 0")
+    if not math.isfinite(args.geometric_eps) or args.geometric_eps <= 0:
+        parser.error("--geometric-eps must be a positive finite float")
 
     repo_root = args.repo_root.resolve()
     out_dir = args.output_dir if args.output_dir.is_absolute() else repo_root / args.output_dir
