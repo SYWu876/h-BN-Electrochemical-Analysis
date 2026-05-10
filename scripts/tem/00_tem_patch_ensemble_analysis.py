@@ -367,6 +367,8 @@ def discover_roi_files(roi_dir: Path) -> Dict[str, Path]:
 def crop_rois_from_source(source_image: Path, roi_csv: Path) -> Dict[str, np.ndarray]:
     img = load_image(source_image)
     df = pd.read_csv(roi_csv)
+    if "roi" not in df.columns and "roi_name" in df.columns:
+        df = df.rename(columns={"roi_name": "roi"})
     required = {"roi", "x", "y", "width", "height"}
     missing = required.difference(df.columns)
     if missing:
@@ -455,19 +457,20 @@ def results_to_tables(results: Sequence[ROIResult], geometric_eps: float) -> Tup
     Pn = minmax(df["P_FFT"].to_numpy())
     An = minmax(df["A_off"].to_numpy())
     Rn = minmax(df["R_bp"].to_numpy())
-    Cn = 1.0 - minmax(df["Delta_q_FFT"].to_numpy())
+    delta_q_norm_raw = minmax(df["Delta_q_FFT"].to_numpy())
+    Cn = 1.0 - delta_q_norm_raw
 
     loi = 100.0 * (Pn + An + Rn + Cn) / 4.0
     g = ((Pn + geometric_eps) * (An + geometric_eps) * (Rn + geometric_eps) * (Cn + geometric_eps)) ** 0.25
     wi = g / np.sum(g)
 
-    df["LOI"] = loi
-    df["w_i"] = wi
+    df["LOI_0_100"] = loi
+    df["geometric_patch_weight_wi"] = wi
 
-    rank_order = df.sort_values("LOI", ascending=False)["ROI"].tolist()
+    rank_order = df.sort_values("LOI_0_100", ascending=False)["ROI"].tolist()
     ranking_str = " > ".join(rank_order)
 
-    centroid_loi = float(np.sum(df["LOI"].to_numpy() * wi))
+    centroid_loi = float(np.sum(df["LOI_0_100"].to_numpy() * wi))
     centroid_dq = float(np.sum(df["Delta_q_FFT"].to_numpy() * wi))
 
     df_norm = pd.DataFrame(
@@ -476,9 +479,10 @@ def results_to_tables(results: Sequence[ROIResult], geometric_eps: float) -> Tup
             "P_FFT_norm": Pn,
             "A_off_norm": An,
             "R_bp_norm": Rn,
-            "Inverted_Delta_q_FFT_norm": Cn,
-            "LOI": loi,
-            "w_i": wi,
+            "Delta_q_FFT_norm_raw": delta_q_norm_raw,
+            "Delta_q_FFT_ordering_tendency_inverted": Cn,
+            "LOI_0_100": loi,
+            "geometric_patch_weight_wi": wi,
         }
     )
 
@@ -559,7 +563,7 @@ def plot_figure_1g(df: pd.DataFrame, metadata: Dict[str, float], out_dir: Path) 
     set_plot_style(1.15)
     fig, ax = plt.subplots(figsize=(6.0, 5.2), dpi=300)
 
-    x = df["LOI"].to_numpy()
+    x = df["LOI_0_100"].to_numpy()
     y = df["Delta_q_FFT"].to_numpy()
     ax.scatter(x, y, s=70)
 
@@ -585,10 +589,10 @@ def plot_figure_1g(df: pd.DataFrame, metadata: Dict[str, float], out_dir: Path) 
 def plot_figure_1h(df: pd.DataFrame, out_dir: Path) -> None:
     set_plot_style(1.15)
     fig, ax = plt.subplots(figsize=(6.0, 5.2), dpi=300)
-    bars = ax.bar(df["ROI"], df["w_i"])
+    bars = ax.bar(df["ROI"], df["geometric_patch_weight_wi"])
     ax.set_xlabel("TEM ROI")
     ax.set_ylabel(r"Geometric patch weight, $w_i$")
-    for bar, val in zip(bars, df["w_i"]):
+    for bar, val in zip(bars, df["geometric_patch_weight_wi"]):
         ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01, f"{val:.3f}", ha="center", va="bottom", fontsize=10)
     style_axes(ax)
     fig.tight_layout()
@@ -607,7 +611,7 @@ def plot_figure_1i(df: pd.DataFrame, out_dir: Path) -> None:
             df["A_off"].to_numpy(),
             df["R_bp"].to_numpy(),
             df["Delta_q_FFT"].to_numpy(),
-            df["LOI"].to_numpy(),
+            df["LOI_0_100"].to_numpy(),
         ]
     )
 
@@ -617,7 +621,7 @@ def plot_figure_1i(df: pd.DataFrame, out_dir: Path) -> None:
             minmax(df["A_off"].to_numpy()),
             minmax(df["R_bp"].to_numpy()),
             1.0 - minmax(df["Delta_q_FFT"].to_numpy()),
-            minmax(df["LOI"].to_numpy()),
+            minmax(df["LOI_0_100"].to_numpy()),
         ]
     )
 
@@ -679,24 +683,6 @@ def main() -> None:
         save_roi_artifacts(result, out_dir)
 
     df, df_norm, metadata = results_to_tables(results, geometric_eps=args.geometric_eps)
-
-    # Add qualitative columns that mirror manuscript use.
-    assessment_map = {
-        "ROI-1": "Very weak local ordering; very high disorder",
-        "ROI-2": "Moderate local ordering; limited local coherence",
-        "ROI-3": "Strongest local ordering among the five",
-        "ROI-4": "Moderate-to-strong local ordering around a localized defect",
-        "ROI-5": "Weak local ordering; high disorder",
-    }
-    interpretation_map = {
-        "ROI-1": "Disorder-tail patch",
-        "ROI-2": "Secondary ensemble contribution",
-        "ROI-3": "Dominant ordered patch",
-        "ROI-4": "Major ensemble contribution",
-        "ROI-5": "Disorder-tail patch",
-    }
-    df["Structural_assessment"] = df["ROI"].map(assessment_map)
-    df["Ensemble_interpretation"] = df["ROI"].map(interpretation_map)
 
     df.to_csv(out_dir / "Table_1_TEM_descriptors.csv", index=False)
     df_norm.to_csv(out_dir / "Table_1_TEM_descriptors_normalized.csv", index=False)

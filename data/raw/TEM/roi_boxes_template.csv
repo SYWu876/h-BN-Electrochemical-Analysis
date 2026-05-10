@@ -1,4 +1,4 @@
-roi_name,x,y,width,height
+roi,x,y,width,height
 ROI-1,0,0,128,128
 ROI-2,0,0,128,128
 ROI-3,0,0,128,128

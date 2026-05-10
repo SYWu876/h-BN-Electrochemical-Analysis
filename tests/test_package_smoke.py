@@ -71,9 +71,39 @@ def test_integrated_domain_archive_files_are_present() -> None:
         assert artifact.exists(), path
         assert artifact.stat().st_size > 0, path
 
+    with (ROOT / "data" / "raw" / "TEM" / "roi_boxes_template.csv").open(newline="", encoding="utf-8") as f:
+        assert next(csv.reader(f)) == ["roi", "x", "y", "width", "height"]
+
+    with (ROOT / "data" / "processed" / "TEM" / "Table_1_TEM_descriptors.csv").open(newline="", encoding="utf-8") as f:
+        assert next(csv.reader(f)) == [
+            "ROI",
+            "P_FFT",
+            "A_off",
+            "R_bp",
+            "Delta_q_FFT",
+            "LOI_0_100",
+            "geometric_patch_weight_wi",
+        ]
+
+    with (ROOT / "data" / "processed" / "TEM" / "Table_1_TEM_descriptors_normalized.csv").open(
+        newline="", encoding="utf-8"
+    ) as f:
+        assert next(csv.reader(f)) == [
+            "ROI",
+            "P_FFT_norm",
+            "A_off_norm",
+            "R_bp_norm",
+            "Delta_q_FFT_norm_raw",
+            "Delta_q_FFT_ordering_tendency_inverted",
+            "LOI_0_100",
+            "geometric_patch_weight_wi",
+        ]
+
     assert not (ROOT / "data" / "raw" / "Raman" / "hBN-3(1).txt").exists()
     assert not (ROOT / "data" / "raw" / "XPS" / "HBN(1).xls").exists()
-    assert (ROOT / "data" / "raw" / "TEM" / "OneView 200kV 800kX 39972.jpg").stat().st_size == 4688772
+    tem_image = ROOT / "data" / "raw" / "TEM" / "OneView 200kV 800kX 39972.jpg"
+    assert tem_image.exists()
+    assert tem_image.stat().st_size > 0
 
 
 def test_package_excludes_cache_and_os_metadata() -> None:

@@ -9,6 +9,9 @@ FIG_DIR = ROOT / "outputs" / "figures" / "GCD"
 TAB_DIR = ROOT / "data" / "processed" / "GCD" / "tables"
 
 def main():
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
+    TAB_DIR.mkdir(parents=True, exist_ok=True)
+
     summary_rows = []
     for j in JS:
         diag = pd.read_csv(DIAG_DIR / f"hBN_GCD_J{j}_processed_diagnostics.csv")
