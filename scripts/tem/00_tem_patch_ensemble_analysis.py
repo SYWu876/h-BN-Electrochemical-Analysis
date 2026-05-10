@@ -444,6 +444,9 @@ def analyze_single_roi(roi_name: str, img: np.ndarray) -> ROIResult:
 
 
 def results_to_tables(results: Sequence[ROIResult], geometric_eps: float) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    if not np.isfinite(geometric_eps) or geometric_eps <= 0:
+        raise ValueError("geometric_eps must be a finite value greater than 0")
+
     df = pd.DataFrame(
         {
             "ROI": [r.roi for r in results],
@@ -462,7 +465,10 @@ def results_to_tables(results: Sequence[ROIResult], geometric_eps: float) -> Tup
 
     loi = 100.0 * (Pn + An + Rn + Cn) / 4.0
     g = ((Pn + geometric_eps) * (An + geometric_eps) * (Rn + geometric_eps) * (Cn + geometric_eps)) ** 0.25
-    wi = g / np.sum(g)
+    weight_sum = np.sum(g)
+    if not np.isfinite(weight_sum) or weight_sum <= 0:
+        raise ValueError("geometric patch weight denominator must be positive and finite")
+    wi = g / weight_sum
 
     df["LOI_0_100"] = loi
     df["geometric_patch_weight_wi"] = wi
@@ -668,6 +674,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_arg_parser()
     args = parser.parse_args()
+
+    if not math.isfinite(args.geometric_eps) or args.geometric_eps <= 0:
+        parser.error("--geometric-eps must be a positive finite float")
 
     repo_root = args.repo_root.resolve()
     out_dir = args.output_dir if args.output_dir.is_absolute() else repo_root / args.output_dir
