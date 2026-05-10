@@ -30,4 +30,6 @@ jobs:
           python -m pip install -r requirements-dev.txt
 
       - name: Run smoke tests
+        env:
+          MPLBACKEND: Agg
         run: pytest
