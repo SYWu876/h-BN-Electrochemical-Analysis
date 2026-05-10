@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import os
 import py_compile
 import re
 import shutil
@@ -11,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_TIMEOUT_SECONDS = 120
+FULL_PIPELINE_TIMEOUT_SECONDS = 360
 
 
 def test_readme_and_citation_contact_email_match() -> None:
@@ -25,8 +27,11 @@ def test_readme_and_citation_contact_email_match() -> None:
     assert readme_match.group(1) in citation_emails, (
         f"README email {readme_match.group(1)!r} was not found in CITATION emails {citation_emails!r}"
     )
-    assert "scripts/02_quantum_branch_comparison.py" in readme_text
-    assert "03_surrogate_qaoa_landscape.py" in readme_text
+    assert "scripts/01_eis_classical_anchor_fit.py" in readme_text
+    assert "scripts/02_eis_quantum_comparison_from_anchor.py" in readme_text
+    assert "scripts/03_eis_surrogate_qaoa_landscape.py" in readme_text
+    assert "scripts/04_eis_shared_objective_full_pipeline.py" in readme_text
+    assert "All EIS surrogate slices used in the manuscript can be regenerated" in readme_text
     assert "R1_Q1_slice.csv" in readme_text
     assert "Rs_alpha1_slice.csv" in readme_text
 
@@ -45,18 +50,18 @@ def test_eis_scripts_write_outputs_in_temporary_project(tmp_path: Path) -> None:
     shutil.copy2(ROOT / "data" / "raw" / "EIS" / "hbn_EIS_1.csv", raw_eis / "hbn_EIS_1.csv")
 
     expected_outputs = {
-        "01_classical_eis_fit.py": [
+        "01_eis_classical_anchor_fit.py": [
             "data/processed/EIS/classical_fit/hBN_EIS_final_fitting_curve.csv",
             "data/processed/EIS/classical_fit/hBN_EIS_final_fit_parameters.csv",
             "data/processed/EIS/classical_fit/hBN_EIS_residuals_final_model.csv",
         ],
-        "02_quantum_branch_comparison.py": [
+        "02_eis_quantum_comparison_from_anchor.py": [
             "data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_parameters.csv",
             "data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_metrics.csv",
             "data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_overlays.csv",
             "data/processed/EIS/quantum_branches/hBN_parameter_deviations.csv",
         ],
-        "03_surrogate_qaoa_landscape.py": [
+        "03_eis_surrogate_qaoa_landscape.py": [
             "data/processed/EIS/qaoa_landscapes/hBN_surrogate_slice.csv",
             "data/processed/EIS/qaoa_landscapes/hBN_qaoa_coarse_landscape.csv",
             "data/processed/EIS/qaoa_landscapes/hBN_qaoa_refined_landscape.csv",
@@ -107,4 +112,66 @@ def test_eis_scripts_write_outputs_in_temporary_project(tmp_path: Path) -> None:
             "Relative_deviation_continuous_percent",
             "Relative_deviation_discrete_percent",
             "Unit",
+        ]
+
+
+def test_full_shared_objective_pipeline_writes_manuscript_slices(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    shutil.copytree(ROOT / "scripts", project / "scripts")
+
+    raw_eis = project / "data" / "raw" / "EIS"
+    raw_eis.mkdir(parents=True)
+    shutil.copy2(ROOT / "data" / "raw" / "EIS" / "hbn_EIS_1.csv", raw_eis / "hbn_EIS_1.csv")
+
+    output_dir = project / "outputs" / "eis_shared_objective"
+    env = {**os.environ, "MPLBACKEND": "Agg"}
+    try:
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(project / "scripts" / "04_eis_shared_objective_full_pipeline.py"),
+                "--input",
+                "data/raw/EIS/hbn_EIS_1.csv",
+                "--output",
+                "outputs/eis_shared_objective",
+            ],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            timeout=FULL_PIPELINE_TIMEOUT_SECONDS,
+            env=env,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout or ""
+        stderr = exc.stderr or ""
+        raise AssertionError(
+            f"04_eis_shared_objective_full_pipeline.py timed out after "
+            f"{FULL_PIPELINE_TIMEOUT_SECONDS} seconds\nstdout:\n{stdout}\n\nstderr:\n{stderr}"
+        ) from exc
+    assert result.returncode == 0, result.stdout + result.stderr
+
+    expected_outputs = [
+        "R1_Q1_slice.csv",
+        "Rs_alpha1_slice.csv",
+        "surrogate_2d_slices.csv",
+        "qaoa_p1_landscape.csv",
+        "decoded_bitstring_summary.json",
+        "nyquist_classical_discrete.png",
+        "qaoa_p1_landscape.png",
+    ]
+    for output_name in expected_outputs:
+        output = output_dir / output_name
+        assert output.exists(), output_name
+        assert output.stat().st_size > 0, output_name
+
+    with (output_dir / "R1_Q1_slice.csv").open(newline="", encoding="utf-8") as f:
+        assert next(csv.reader(f)) == [
+            "slice",
+            "param_x",
+            "param_y",
+            "internal_param_x",
+            "internal_param_y",
+            "normalized_x",
+            "normalized_y",
+            "surrogate_energy",
         ]
