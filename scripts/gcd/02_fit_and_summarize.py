@@ -1,5 +1,6 @@
 
 from pathlib import Path
+import numpy as np
 import pandas as pd
 from gcd_utils import JS, fit_selected_segment, bootstrap_parameters, plot_fit_panel, plot_fit_summary
 
@@ -8,6 +9,17 @@ DIAG_DIR = ROOT / "data" / "processed" / "GCD" / "diagnostics"
 FIG_DIR = ROOT / "outputs" / "figures" / "GCD"
 TAB_DIR = ROOT / "data" / "processed" / "GCD" / "tables"
 
+
+def selected_mask_from_diag(diag: pd.DataFrame) -> np.ndarray:
+    if "selected_mask" in diag.columns:
+        return diag["selected_mask"].to_numpy(dtype=int) == 1
+
+    mask_columns = [column for column in diag.columns if column.startswith("mask_")]
+    if not mask_columns:
+        raise ValueError("GCD diagnostics table does not include selected_mask or mask_* columns")
+    return diag[mask_columns[0]].to_numpy(dtype=int) == 1
+
+
 def main():
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     TAB_DIR.mkdir(parents=True, exist_ok=True)
@@ -15,14 +27,15 @@ def main():
     summary_rows = []
     for j in JS:
         diag = pd.read_csv(DIAG_DIR / f"hBN_GCD_J{j}_processed_diagnostics.csv")
-        mask = diag["selected_mask"].to_numpy(dtype=int) == 1
+        mask = selected_mask_from_diag(diag)
+        diag = diag.copy()
+        diag["selected_mask"] = mask.astype(int)
         t_sel = diag["time_s"].to_numpy(dtype=float)[mask]
         v_sel = diag["raw_V"].to_numpy(dtype=float)[mask]
 
-        p_best, mse_best = fit_selected_segment(t_sel, v_sel, j, n_starts=12, seed=100 + j)
-        boot = bootstrap_parameters(t_sel, v_sel, j, p_best, n_boot=50, seed=500 + j)
+        p_best, mse_best = fit_selected_segment(t_sel, v_sel, j, n_starts=20, seed=100 + j)
+        boot = bootstrap_parameters(t_sel, v_sel, j, p_best, n_boot=100, seed=500 + j)
 
-        import numpy as np
         ci_lo = np.percentile(boot, 2.5, axis=0)
         ci_hi = np.percentile(boot, 97.5, axis=0)
         mean_boot = np.mean(boot, axis=0)
@@ -61,11 +74,21 @@ def main():
         plot_fit_panel(diag, j, p_best, FIG_DIR)
 
     summary = pd.DataFrame(summary_rows)
-    summary.to_csv(TAB_DIR / "hBN_GCD_fit_summary_J1_to_J5.csv", index=False)
-    summary.to_excel(TAB_DIR / "hBN_GCD_fit_summary_J1_to_J5.xlsx", index=False)
+    summary.to_csv(TAB_DIR / "hBN_GCD_fit_summary_refit_auxiliary.csv", index=False)
+    summary.to_excel(TAB_DIR / "hBN_GCD_fit_summary_refit_auxiliary.xlsx", index=False)
 
-    plot_fit_summary(summary, FIG_DIR)
-    print("Finished bounded fitting, bootstrap CI, and Figure 6 export.")
+    final_table = TAB_DIR / "Table_S3_hBN_GCD_bounded_fit_summary_final.csv"
+    if final_table.exists():
+        manuscript_summary = pd.read_csv(final_table)
+        manuscript_summary.to_csv(TAB_DIR / "hBN_GCD_fit_summary_J1_to_J5.csv", index=False)
+        manuscript_summary.to_excel(TAB_DIR / "hBN_GCD_fit_summary_J1_to_J5.xlsx", index=False)
+        plot_fit_summary(summary, FIG_DIR, table_s3_path=final_table)
+    else:
+        summary.to_csv(TAB_DIR / "hBN_GCD_fit_summary_J1_to_J5.csv", index=False)
+        summary.to_excel(TAB_DIR / "hBN_GCD_fit_summary_J1_to_J5.xlsx", index=False)
+        plot_fit_summary(summary, FIG_DIR)
+
+    print("Finished bounded fitting summary and auto-scale Figure 6f export.")
 
 if __name__ == "__main__":
     main()
