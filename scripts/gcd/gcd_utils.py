@@ -10,14 +10,6 @@ from scipy.optimize import least_squares
 
 JS = [1, 2, 3, 4, 5]
 
-MANUSCRIPT_TAGS = {
-    1: "Figure5",
-    2: "FigureS1",
-    3: "FigureS2",
-    4: "FigureS3",
-    5: "FigureS4",
-}
-
 def setup_matplotlib() -> None:
     plt.rcParams.update({
         "font.family": "serif",
@@ -169,21 +161,20 @@ def select_stable_window(diag: pd.DataFrame, j_value: int, ir_cut: float = 0.15)
 
 def manuscript_panel_paths(output_dir: str | Path, j_value: int) -> dict[str, Path]:
     output_dir = Path(output_dir)
-    tag = MANUSCRIPT_TAGS[j_value]
-    base = output_dir / f"hBN_GCD_{tag}"
+    base = output_dir / f"hBN_GCD_J{j_value}"
     return {
-        "a_png": base.with_name(base.name + f"a_J{j_value}_raw_smoothed.png"),
-        "b_png": base.with_name(base.name + f"b_J{j_value}_dVdt.png"),
-        "c_png": base.with_name(base.name + f"c_J{j_value}_curvature_stability.png"),
-        "d_png": base.with_name(base.name + f"d_J{j_value}_IRdrop_region.png"),
-        "e_png": base.with_name(base.name + f"e_J{j_value}_selected_window.png"),
-        "combined_png": base.with_name(base.name + f"a_e_J{j_value}_combined.png"),
-        "a_pdf": base.with_name(base.name + f"a_J{j_value}_raw_smoothed.pdf"),
-        "b_pdf": base.with_name(base.name + f"b_J{j_value}_dVdt.pdf"),
-        "c_pdf": base.with_name(base.name + f"c_J{j_value}_curvature_stability.pdf"),
-        "d_pdf": base.with_name(base.name + f"d_J{j_value}_IRdrop_region.pdf"),
-        "e_pdf": base.with_name(base.name + f"e_J{j_value}_selected_window.pdf"),
-        "combined_pdf": base.with_name(base.name + f"a_e_J{j_value}_combined.pdf"),
+        "a_png": base.with_name(base.name + "_raw_smoothed.png"),
+        "b_png": base.with_name(base.name + "_dVdt.png"),
+        "c_png": base.with_name(base.name + "_curvature_stability.png"),
+        "d_png": base.with_name(base.name + "_IRdrop_region.png"),
+        "e_png": base.with_name(base.name + "_selected_window.png"),
+        "combined_png": base.with_name(base.name + "_diagnostic_stack.png"),
+        "a_pdf": base.with_name(base.name + "_raw_smoothed.pdf"),
+        "b_pdf": base.with_name(base.name + "_dVdt.pdf"),
+        "c_pdf": base.with_name(base.name + "_curvature_stability.pdf"),
+        "d_pdf": base.with_name(base.name + "_IRdrop_region.pdf"),
+        "e_pdf": base.with_name(base.name + "_selected_window.pdf"),
+        "combined_pdf": base.with_name(base.name + "_diagnostic_stack.pdf"),
     }
 
 def plot_diagnostic_panels(diag: pd.DataFrame, j_value: int, output_dir: str | Path) -> dict[str, Path]:
@@ -431,9 +422,8 @@ def plot_fit_panel(diag: pd.DataFrame, j_value: int, p_best: np.ndarray,
     t_sel = t_all[mask]
     v_sel = diag["raw_V"].to_numpy(dtype=float)[mask]
 
-    panel_idx = {1: "6a", 2: "6b", 3: "6c", 4: "6d", 5: "6e"}[j_value]
-    png = output_dir / f"hBN_Figure{panel_idx}_J{j_value}_fit.png"
-    pdf = output_dir / f"hBN_Figure{panel_idx}_J{j_value}_fit.pdf"
+    png = output_dir / f"hBN_GCD_J{j_value}_fit.png"
+    pdf = output_dir / f"hBN_GCD_J{j_value}_fit.pdf"
 
     fig, ax = plt.subplots(figsize=(5.8, 4.2), dpi=300)
     ax.plot(t_all, v_sm, linewidth=1.0, alpha=0.8, label="Smoothed discharge")
@@ -476,8 +466,8 @@ def plot_fit_summary(summary: pd.DataFrame, output_dir: str | Path, table_s3_pat
         Rlo = summary["Rs_CI_low_ohm_g"].to_numpy()
         Rhi = summary["Rs_CI_high_ohm_g"].to_numpy()
 
-    png = output_dir / "hBN_Figure6f_Csp_Rs_vs_J.png"
-    pdf = output_dir / "hBN_Figure6f_Csp_Rs_vs_J.pdf"
+    png = output_dir / "hBN_GCD_Csp_Rs_vs_J.png"
+    pdf = output_dir / "hBN_GCD_Csp_Rs_vs_J.pdf"
 
     fig, ax1 = plt.subplots(figsize=(6.0, 4.4), dpi=300)
     c1 = "blue"

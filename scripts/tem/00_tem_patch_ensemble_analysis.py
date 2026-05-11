@@ -29,11 +29,11 @@ Supported input modes
 
 Outputs
 -------
-- data/processed/TEM/Table_1_TEM_descriptors.csv
-- data/processed/TEM/Table_1_TEM_descriptors_normalized.csv
-- data/processed/TEM/Figure_1g_order_disorder_map.png/.pdf
-- data/processed/TEM/Figure_1h_geometric_patch_weights.png/.pdf
-- data/processed/TEM/Figure_1i_descriptor_heatmap.png/.pdf
+- data/processed/TEM/TEM_descriptors.csv
+- data/processed/TEM/TEM_descriptors_normalized.csv
+- data/processed/TEM/TEM_order_disorder_map.png/.pdf
+- data/processed/TEM/TEM_geometric_patch_weights.png/.pdf
+- data/processed/TEM/TEM_descriptor_heatmap.png/.pdf
 - ROI-level PNG exports: processed image, FFT magnitude, lattice map, maxima overlay
 
 Minimal example
@@ -586,8 +586,8 @@ def plot_figure_1g(df: pd.DataFrame, metadata: Dict[str, float], out_dir: Path) 
     ax.set_ylabel(r"$\Delta q_{\mathrm{FFT}}$ (a.u.; peak width)")
     style_axes(ax)
     fig.tight_layout()
-    fig.savefig(out_dir / "Figure_1g_order_disorder_map.png", bbox_inches="tight")
-    fig.savefig(out_dir / "Figure_1g_order_disorder_map.pdf", bbox_inches="tight")
+    fig.savefig(out_dir / "TEM_order_disorder_map.png", bbox_inches="tight")
+    fig.savefig(out_dir / "TEM_order_disorder_map.pdf", bbox_inches="tight")
     plt.close(fig)
 
 
@@ -602,8 +602,8 @@ def plot_figure_1h(df: pd.DataFrame, out_dir: Path) -> None:
         ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01, f"{val:.3f}", ha="center", va="bottom", fontsize=10)
     style_axes(ax)
     fig.tight_layout()
-    fig.savefig(out_dir / "Figure_1h_geometric_patch_weights.png", bbox_inches="tight")
-    fig.savefig(out_dir / "Figure_1h_geometric_patch_weights.pdf", bbox_inches="tight")
+    fig.savefig(out_dir / "TEM_geometric_patch_weights.png", bbox_inches="tight")
+    fig.savefig(out_dir / "TEM_geometric_patch_weights.pdf", bbox_inches="tight")
     plt.close(fig)
 
 
@@ -649,8 +649,8 @@ def plot_figure_1i(df: pd.DataFrame, out_dir: Path) -> None:
     cbar.set_label("Normalized ordering tendency")
     style_axes(ax)
     fig.tight_layout()
-    fig.savefig(out_dir / "Figure_1i_descriptor_heatmap.png", bbox_inches="tight")
-    fig.savefig(out_dir / "Figure_1i_descriptor_heatmap.pdf", bbox_inches="tight")
+    fig.savefig(out_dir / "TEM_descriptor_heatmap.png", bbox_inches="tight")
+    fig.savefig(out_dir / "TEM_descriptor_heatmap.pdf", bbox_inches="tight")
     plt.close(fig)
 
 
@@ -693,8 +693,8 @@ def main() -> None:
 
     df, df_norm, metadata = results_to_tables(results, geometric_eps=args.geometric_eps)
 
-    df.to_csv(out_dir / "Table_1_TEM_descriptors.csv", index=False)
-    df_norm.to_csv(out_dir / "Table_1_TEM_descriptors_normalized.csv", index=False)
+    df.to_csv(out_dir / "TEM_descriptors.csv", index=False)
+    df_norm.to_csv(out_dir / "TEM_descriptors_normalized.csv", index=False)
 
     if args.save_json_summary:
         with open(out_dir / "TEM_ensemble_summary.json", "w", encoding="utf-8") as f:
@@ -708,11 +708,11 @@ def main() -> None:
     print(f"Output directory: {out_dir}")
     print("Generated files:")
     for name in [
-        "Table_1_TEM_descriptors.csv",
-        "Table_1_TEM_descriptors_normalized.csv",
-        "Figure_1g_order_disorder_map.png",
-        "Figure_1h_geometric_patch_weights.png",
-        "Figure_1i_descriptor_heatmap.png",
+        "TEM_descriptors.csv",
+        "TEM_descriptors_normalized.csv",
+        "TEM_order_disorder_map.png",
+        "TEM_geometric_patch_weights.png",
+        "TEM_descriptor_heatmap.png",
     ]:
         print(f"  - {out_dir / name}")
     print(f"Ensemble centroid: LOI = {metadata['ensemble_centroid_LOI']:.3f}, Delta_q_FFT = {metadata['ensemble_centroid_Delta_q_FFT']:.3f}")

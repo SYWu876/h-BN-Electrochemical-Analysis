@@ -13,7 +13,7 @@ SYWu876/h-BN-Electrochemical-Analysis
 - `data/raw/TEM/roi_boxes_template.csv`
   Template for ROI cropping from the raw TEM image.
 - `data/processed/TEM/`
-  Included example processed outputs for Table 1 and Figure 1g–i.
+  Included example processed descriptor tables and reconstruction figures.
 
 ## Raw TEM image filename convention
 
@@ -51,11 +51,11 @@ python scripts/tem/00_tem_patch_ensemble_analysis.py \
 
 ## Included example outputs in processed/TEM
 
-- `Table_1_TEM_descriptors.csv`
-- `Table_1_TEM_descriptors_normalized.csv`
-- `Figure_1g_order_disorder_map.png`
-- `Figure_1h_geometric_patch_weights.png`
-- `Figure_1i_descriptor_heatmap.png`
+- `TEM_descriptors.csv`
+- `TEM_descriptors_normalized.csv`
+- `TEM_order_disorder_map.png`
+- `TEM_geometric_patch_weights.png`
+- `TEM_descriptor_heatmap.png`
 
 ## Notes
 

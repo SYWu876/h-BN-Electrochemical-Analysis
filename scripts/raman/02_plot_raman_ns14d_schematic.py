@@ -64,7 +64,7 @@ def main():
     ax.text(0.50, 0.06, "Raman-detected structural heterogeneity provides a consistent basis for the mixed CV kinetics, non-ideal GCD behavior, and distributed EIS relaxation of processed h-BN.", ha="center", va="center", fontsize=11.3)
 
     for ext in ("png","pdf","svg"):
-        fig.savefig(out/f"Figure_NS14d_Raman.{ext}", dpi=600 if ext=="png" else None, bbox_inches="tight")
+        fig.savefig(out/f"Raman_heterogeneity_schematic.{ext}", dpi=600 if ext=="png" else None, bbox_inches="tight")
     plt.close(fig)
     print("Done.")
 
