@@ -44,7 +44,7 @@ def save_fig_ns14a(x, y, baseline, x0, fwhm, y_model_full, out):
     ax.margins(x=0.02)
     fig.tight_layout()
     for ext in ("png","pdf","svg"):
-        fig.savefig(out/f"Figure_NS14a_Raman.{ext}", dpi=600 if ext=="png" else None, bbox_inches="tight")
+        fig.savefig(out/f"Raman_raw_baseline_fit.{ext}", dpi=600 if ext=="png" else None, bbox_inches="tight")
     plt.close(fig)
 
 def save_fig_ns14b(x, y_corr, x_fit, y_model_fit, x0, fwhm, x_left, x_right, out):
@@ -68,7 +68,7 @@ def save_fig_ns14b(x, y_corr, x_fit, y_model_fit, x0, fwhm, x_left, x_right, out
     ax.margins(x=0.02, y=0.08)
     fig.tight_layout()
     for ext in ("png","pdf","svg"):
-        fig.savefig(out/f"Figure_NS14b_Raman.{ext}", dpi=600 if ext=="png" else None, bbox_inches="tight")
+        fig.savefig(out/f"Raman_baseline_corrected_fit.{ext}", dpi=600 if ext=="png" else None, bbox_inches="tight")
     plt.close(fig)
 
 def save_fig_ns14c(xp, yp, labels, name_map, low_lab, mid_lab, high_lab, out):
@@ -97,7 +97,7 @@ def save_fig_ns14c(xp, yp, labels, name_map, low_lab, mid_lab, high_lab, out):
     ax.margins(x=0.02, y=0.10)
     fig.tight_layout()
     for ext in ("png","pdf","svg"):
-        fig.savefig(out/f"Figure_NS14c_Raman.{ext}", dpi=600 if ext=="png" else None, bbox_inches="tight")
+        fig.savefig(out/f"Raman_segmentation.{ext}", dpi=600 if ext=="png" else None, bbox_inches="tight")
     plt.close(fig)
 
 def main():

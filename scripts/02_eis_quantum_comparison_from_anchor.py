@@ -1,4 +1,4 @@
-"""Rebuild Figure 10 data products for classical / continuous / discrete hBN EIS routes."""
+"""Rebuild classical / continuous / discrete hBN EIS route comparison products."""
 from __future__ import annotations
 
 from pathlib import Path
