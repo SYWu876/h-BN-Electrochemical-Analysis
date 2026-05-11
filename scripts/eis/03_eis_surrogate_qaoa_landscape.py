@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import least_squares
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw" / "EIS" / "hbn_EIS_1.csv"
 OUT = ROOT / "data" / "processed" / "EIS" / "qaoa_landscapes"
 OUT.mkdir(parents=True, exist_ok=True)
