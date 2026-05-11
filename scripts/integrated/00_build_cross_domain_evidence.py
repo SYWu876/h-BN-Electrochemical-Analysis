@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 DOMAINS = ["TEM", "Raman", "XPS", "CV", "GCD", "EIS"]
+EXPECTED_DESCRIPTORS_PER_DOMAIN = 4
 
 
 def parse_args() -> argparse.Namespace:
@@ -148,10 +149,30 @@ def build_long_table(root: Path) -> pd.DataFrame:
 def build_heatmap_matrix(long_df: pd.DataFrame) -> pd.DataFrame:
     domains = []
     values = []
+    present_domains = set(long_df["domain"].astype(str))
+    missing_domains = [domain for domain in DOMAINS if domain not in present_domains]
+    if missing_domains:
+        raise ValueError(
+            "Missing cross-domain descriptor rows for domain(s): "
+            + ", ".join(missing_domains)
+            + ". Rebuild or inspect the corresponding processed input tables."
+        )
+
     for domain in DOMAINS:
         sub = long_df[long_df["domain"] == domain].sort_values("descriptor")
+        count = len(sub)
+        if count != EXPECTED_DESCRIPTORS_PER_DOMAIN:
+            source_paths = ", ".join(sorted(str(path) for path in sub["source_path"].dropna().unique()))
+            source_hint = f" Source paths present: {source_paths}." if source_paths else ""
+            raise ValueError(
+                f"Expected {EXPECTED_DESCRIPTORS_PER_DOMAIN} descriptors for domain {domain}, "
+                f"found {count}.{source_hint}"
+            )
+        domain_values = sub["value"].to_numpy(dtype=float)
+        if not np.all(np.isfinite(domain_values)):
+            raise ValueError(f"Non-finite descriptor value found for domain {domain}.")
         domains.append(domain)
-        values.append(sub["value"].to_numpy(dtype=float))
+        values.append(domain_values)
     matrix = np.vstack(values)
     scaled = StandardScaler().fit_transform(matrix)
     return pd.DataFrame(scaled, index=domains, columns=[f"descriptor_{i+1}" for i in range(matrix.shape[1])])
@@ -198,12 +219,16 @@ def make_figures(heatmap: pd.DataFrame, pca_projection: pd.DataFrame, out_dir: P
     fig.savefig(out_dir / "hBN_cross_domain_heatmap.pdf", bbox_inches="tight")
     plt.close(fig)
 
+    has_pc2 = "PC2" in pca_projection.columns and pca_projection["PC2"].notna().any()
+    y_values = pca_projection["PC2"] if has_pc2 else np.zeros(len(pca_projection))
+
     fig, ax = plt.subplots(figsize=(5.2, 4.4), dpi=300)
-    ax.scatter(pca_projection["PC1"], pca_projection["PC2"], s=70)
+    ax.scatter(pca_projection["PC1"], y_values, s=70)
     for _, row in pca_projection.iterrows():
-        ax.text(row["PC1"], row["PC2"], f"  {row['domain']}", va="center")
+        y = row["PC2"] if has_pc2 else 0.0
+        ax.text(row["PC1"], y, f"  {row['domain']}", va="center")
     ax.set_xlabel("PC1 (exploratory)")
-    ax.set_ylabel("PC2 (exploratory)")
+    ax.set_ylabel("PC2 (exploratory)" if has_pc2 else "PC2 unavailable")
     ax.set_title("Cross-domain exploratory PCA")
     style_axes(ax)
     fig.tight_layout()
@@ -222,10 +247,10 @@ def main() -> None:
     heatmap = build_heatmap_matrix(long_df)
     pca_projection, pca_loadings = build_pca_tables(heatmap)
 
-    long_df.to_csv(out_dir / "hBN_cross_domain_descriptor_long.csv", index=False)
-    heatmap.to_csv(out_dir / "hBN_cross_domain_heatmap_matrix.csv", index_label="domain")
-    pca_projection.to_csv(out_dir / "hBN_cross_domain_pca_projection.csv", index=False)
-    pca_loadings.to_csv(out_dir / "hBN_cross_domain_pca_loadings.csv", index=False)
+    long_df.to_csv(out_dir / "hBN_cross_domain_descriptor_long.csv", index=False, lineterminator="\n")
+    heatmap.to_csv(out_dir / "hBN_cross_domain_heatmap_matrix.csv", index_label="domain", lineterminator="\n")
+    pca_projection.to_csv(out_dir / "hBN_cross_domain_pca_projection.csv", index=False, lineterminator="\n")
+    pca_loadings.to_csv(out_dir / "hBN_cross_domain_pca_loadings.csv", index=False, lineterminator="\n")
 
     if args.make_figures:
         make_figures(heatmap, pca_projection, root / "outputs" / "figures" / "integrated")

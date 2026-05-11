@@ -72,9 +72,9 @@ data/processed/XPS/O1s_profile_fit_summary.csv,processed,XPS,csv,184,Processed X
 data/processed/XPS/XPS_corrected_13peak_descriptor_matrix.csv,processed,XPS,csv,1517,Processed XPS profile-fit or descriptor table,061955ca90cc80f14c55e96499a3533d24b9a7f202b0f0bad2c2932ad7f01f4d
 data/processed/XPS/XPS_13_peak_assignments.csv,processed,XPS,csv,815,Processed XPS profile-fit or descriptor table,1a10f8cdd33b4ac741b6c1fe64b07a8e43c5b0753d8f5a9faaa4800c2a98dea0
 data/processed/integrated/hBN_cross_domain_descriptor_long.csv,processed,integrated,csv,2370,"Integrated cross-domain descriptor, heatmap, or exploratory PCA table",317d759fdebc9c8aa109ba082914ee44fbd3a8861d7ddad3d2ff50178e860e06
-data/processed/integrated/hBN_cross_domain_heatmap_matrix.csv,processed,integrated,csv,564,"Integrated cross-domain descriptor, heatmap, or exploratory PCA table",4ce29e3021b9fbf8e3c10201ccb04ff2a01b1c4f2adcc463fc5de651b721433d
-data/processed/integrated/hBN_cross_domain_pca_loadings.csv,processed,integrated,csv,241,"Integrated cross-domain descriptor, heatmap, or exploratory PCA table",dbd353085c545d5ea42f76ff4147576bdfb5254c53292f444d61397786ae424b
-data/processed/integrated/hBN_cross_domain_pca_projection.csv,processed,integrated,csv,573,"Integrated cross-domain descriptor, heatmap, or exploratory PCA table",edcb131fdd1c5f6345eb61ab08a9627b7f9a1f428b9aa1a8990940089d96ed42
+data/processed/integrated/hBN_cross_domain_heatmap_matrix.csv,processed,integrated,csv,557,"Integrated cross-domain descriptor, heatmap, or exploratory PCA table",9161767f8ba8e5ec7ba242d4b78176548647db6766b6a6f917455a04a995a7a7
+data/processed/integrated/hBN_cross_domain_pca_loadings.csv,processed,integrated,csv,236,"Integrated cross-domain descriptor, heatmap, or exploratory PCA table",d9bd63d5c3d67aacaef739758e52f197ef7f64ad4fcba907ee6b518248dfad61
+data/processed/integrated/hBN_cross_domain_pca_projection.csv,processed,integrated,csv,566,"Integrated cross-domain descriptor, heatmap, or exploratory PCA table",cc5c53f83c81b1d350f9947ec3782ee956217a65c5d9b4d0419722b904d56453
 data/raw/CV/CV_total.csv,raw,CV,csv,210223,Raw cyclic voltammetry input or derived source table,a86e16dd125233e2e16a91c273960f62fa886d4afafd17059493172b194bedb7
 data/raw/CV/hBN_Dunn_partition_data.csv,raw,CV,csv,57093,Raw cyclic voltammetry input or derived source table,e4f684507c40073828e7781e96f6aaff7c91cd5a1b118ac379cd2a50b32de5ed
 data/raw/CV/hBN_b_values.csv,raw,CV,csv,34261,Raw cyclic voltammetry input or derived source table,7b9f99ae61fa26778bb9e88bddbee195626176812c0f6a0fa55b3333f384ecbb
@@ -146,7 +146,7 @@ scripts/gcd/00_run_all_gcd_analysis.py,script,analysis,py,482,Python analysis sc
 scripts/gcd/01_preprocess_and_select_windows.py,script,analysis,py,2259,Python analysis script,5d81bce38ffcd134c4093dda7502b6edc6a609c593ec38ad96c32565e096ebaa
 scripts/gcd/02_fit_and_summarize.py,script,analysis,py,3766,Python analysis script,689a5c0b027979a092465acd58494afd1483112f5c50d5f87b00d3084ac970dc
 scripts/gcd/gcd_utils.py,script,analysis,py,20864,Python analysis script,6e679fa5b68e3fcc1a804bc9c8507b80c26e132d698d902c18d71d6f081a7d15
-scripts/integrated/00_build_cross_domain_evidence.py,script,analysis,py,10430,Python analysis script,effdf0e87eae2278545e2dcbeadbf934dda013c74d9a6266ebd780540f866f3c
+scripts/integrated/00_build_cross_domain_evidence.py,script,analysis,py,11805,Python analysis script,4561bc50aece63f5cbb18c2188a786e9909ab8becb8da253e77adb84ecc5a7a5
 scripts/raman/01_raman_analysis_pipeline.py,script,analysis,py,9269,Python analysis script,6283d3e8f686671e9d3bdb7869211c90b5e4a89f74f2bd958d5c4cffdef849b8
 scripts/raman/02_plot_raman_ns14d_schematic.py,script,analysis,py,3018,Python analysis script,08ac9f47bbd1ce6f5ecea96a166f27247c65845814495e3a447113833be5a2ac
 scripts/tem/00_tem_patch_ensemble_analysis.py,script,analysis,py,25180,Python analysis script,3a200ae6ae0e096f2e9d7779c689e7c569161956557956e10460f26bb45a120b
@@ -155,4 +155,4 @@ scripts/xps/02_profile_fit_ns15_abcd.py,script,analysis,py,4008,Python analysis 
 scripts/xps/03_ml_analysis_ns15_ef.py,script,analysis,py,5728,Python analysis script,6d7562670e54f8e8daba73d0760ac279feccb151543ccb54332ba76063ba7b96
 scripts/xps/04_run_xps_pipeline.py,script,analysis,py,440,Python analysis script,2b6cc16dfa59d956d8d17852d39a7d93877f5b0a2110cfef7017ff0042b89d3b
 scripts/xps/utils_xps.py,script,analysis,py,6955,Python analysis script,a86c94280e2cd1881dacf7314dded4e56890b4bf96ef66b10fba165934356785
-tests/test_package_smoke.py,test,test,py,14202,Pytest smoke test,fed14a19f1d5db5404f126f70c31590cf57ccf26262e27eb468469f9fedd6baa
+tests/test_package_smoke.py,test,test,py,16821,Pytest smoke test,8b830402fc7f8d2dda08e247c5b1a3736013450446c5d605bc15079d8e04f53f
