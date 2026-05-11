@@ -56,17 +56,17 @@ def test_integrated_domain_archive_files_are_present() -> None:
         "scripts/raman/01_raman_analysis_pipeline.py",
         "scripts/tem/00_tem_patch_ensemble_analysis.py",
         "scripts/xps/04_run_xps_pipeline.py",
-        "data/processed/CV/Figure2c_peak_summary.csv",
+        "data/processed/CV/CV_peak_summary.csv",
         "data/processed/GCD/diagnostics/hBN_GCD_J1_processed_diagnostics.csv",
         "data/processed/GCD/tables/hBN_GCD_fit_summary_J1_to_J5.csv",
-        "data/processed/GCD/tables/Table_S3_hBN_GCD_bounded_fit_summary_final.csv",
+        "data/processed/GCD/tables/hBN_GCD_bounded_fit_summary_final.csv",
         "data/processed/integrated/hBN_cross_domain_descriptor_long.csv",
         "data/processed/integrated/hBN_cross_domain_heatmap_matrix.csv",
         "data/processed/integrated/hBN_cross_domain_pca_projection.csv",
         "data/processed/integrated/hBN_cross_domain_pca_loadings.csv",
         "data/processed/Raman/raman_fit_summary.csv",
-        "data/processed/TEM/Table_1_TEM_descriptors.csv",
-        "data/processed/XPS/Table_X_13_peaks.csv",
+        "data/processed/TEM/TEM_descriptors.csv",
+        "data/processed/XPS/XPS_13_peak_assignments.csv",
         "data/raw/TEM/roi_boxes_template.csv",
         "data/raw/XPS/HBN.xlsx",
         "docs/Note_S7_Raman_GitHub.md",
@@ -81,7 +81,7 @@ def test_integrated_domain_archive_files_are_present() -> None:
     with (ROOT / "data" / "raw" / "TEM" / "roi_boxes_template.csv").open(newline="", encoding="utf-8") as f:
         assert next(csv.reader(f)) == ["roi", "x", "y", "width", "height"]
 
-    with (ROOT / "data" / "processed" / "TEM" / "Table_1_TEM_descriptors.csv").open(newline="", encoding="utf-8") as f:
+    with (ROOT / "data" / "processed" / "TEM" / "TEM_descriptors.csv").open(newline="", encoding="utf-8") as f:
         assert next(csv.reader(f)) == [
             "ROI",
             "P_FFT",
@@ -92,7 +92,7 @@ def test_integrated_domain_archive_files_are_present() -> None:
             "geometric_patch_weight_wi",
         ]
 
-    with (ROOT / "data" / "processed" / "TEM" / "Table_1_TEM_descriptors_normalized.csv").open(
+    with (ROOT / "data" / "processed" / "TEM" / "TEM_descriptors_normalized.csv").open(
         newline="", encoding="utf-8"
     ) as f:
         assert next(csv.reader(f)) == [
@@ -150,6 +150,10 @@ def test_package_excludes_cache_and_os_metadata() -> None:
         assert not path.name.startswith("._"), path.as_posix()
         assert path.suffix != ".pyc", path.as_posix()
         assert not path.as_posix().startswith("outputs/figures/integrated/"), path.as_posix()
+
+    for artifact in (ROOT / "data" / "processed").rglob("*"):
+        if artifact.is_file():
+            assert not artifact.name.startswith(("Figure", "Table")), artifact.relative_to(ROOT).as_posix()
 
 
 def test_tem_pipeline_rejects_invalid_geometric_eps(tmp_path: Path) -> None:

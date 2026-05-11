@@ -17,7 +17,7 @@ This package is designed primarily as a transparent numerical and graphical arch
 
 - The **TEM/Raman/XPS** workflows are represented by raw inputs, processed descriptor/profile tables, and domain-specific reproducibility scripts under `scripts/tem/`, `scripts/raman/`, and `scripts/xps/`.
 - The **CV** branch is represented by raw and processed CSV tables that support rate-dependent scaling, `b`-value analysis, Dunn separation, Ising-type segmentation, and Q-KPCA embedding.
-- The **GCD** branch is represented by raw traces, preprocessing diagnostics, bounded-fit summaries, bootstrap outputs, residual tables, and the corrected final Table S3 summary used for the manuscript-facing Figure 6f auto-scale workflow.
+- The **GCD** branch is represented by raw traces, preprocessing diagnostics, bounded-fit summaries, bootstrap outputs, residual tables, and the corrected final manuscript summary used for the auto-scaled GCD summary workflow.
 - The **EIS** branch includes both the raw spectrum and executable scripts that regenerate selected classical-fit, quantum-branch-comparison, surrogate-slice, and QAOA-landscape CSV products.
 - The **integrated evidence** branch assembles a conservative descriptor matrix, heatmap table, and exploratory PCA projection from committed processed outputs only. These tables are intended for multi-modal visualization and do not imply statistical significance or causal inference.
 

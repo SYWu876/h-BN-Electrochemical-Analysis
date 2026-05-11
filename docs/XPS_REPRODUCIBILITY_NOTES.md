@@ -10,7 +10,7 @@ The source file is supplied as legacy `.xls`. The helper functions try, in order
 3. reading the converted `.xlsx`
 
 ## Adopted 13-peak definition
-The corrected ML analysis uses the peak centers and area fractions adopted in Table X:
+The corrected ML analysis uses the archived XPS peak centers and area fractions:
 
 - B1s: B-def, B–N, B-ox
 - N1s: N-def, N–B, N-ox

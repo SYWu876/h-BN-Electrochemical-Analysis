@@ -102,8 +102,8 @@ for region, spec in REGION_SPECS.items():
         spine.set_linewidth(1.2)
 
     plt.tight_layout()
-    png = OUT_FIG / f"Figure_NS15_{region}_overlay_on_background.png"
-    pdf = OUT_FIG / f"Figure_NS15_{region}_overlay_on_background.pdf"
+    png = OUT_FIG / f"XPS_{region}_overlay_on_background.png"
+    pdf = OUT_FIG / f"XPS_{region}_overlay_on_background.pdf"
     plt.savefig(png, dpi=600, bbox_inches="tight", facecolor="white")
     plt.savefig(pdf, dpi=600, bbox_inches="tight", facecolor="white")
     plt.close(fig)

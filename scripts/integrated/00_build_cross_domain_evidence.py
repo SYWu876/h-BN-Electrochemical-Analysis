@@ -57,7 +57,7 @@ def weighted_mean(values: pd.Series, weights: pd.Series) -> float:
 
 
 def collect_tem(root: Path, rows: list[dict[str, object]]) -> None:
-    rel = "data/processed/TEM/Table_1_TEM_descriptors.csv"
+    rel = "data/processed/TEM/TEM_descriptors.csv"
     df = pd.read_csv(root / rel)
     weights = df["geometric_patch_weight_wi"]
     add_descriptor(rows, "TEM", "mean_LOI_0_100", df["LOI_0_100"].mean(), "0-100", rel)
@@ -85,8 +85,8 @@ def collect_raman(root: Path, rows: list[dict[str, object]]) -> None:
 
 
 def collect_xps(root: Path, rows: list[dict[str, object]]) -> None:
-    peaks_rel = "data/processed/XPS/Table_X_13_peaks.csv"
-    matrix_rel = "data/processed/XPS/Table_X1_corrected_13peak_descriptor_matrix.csv"
+    peaks_rel = "data/processed/XPS/XPS_13_peak_assignments.csv"
+    matrix_rel = "data/processed/XPS/XPS_corrected_13peak_descriptor_matrix.csv"
     peaks = pd.read_csv(root / peaks_rel)
     matrix = pd.read_csv(root / matrix_rel)
     add_descriptor(rows, "XPS", "defect_area_fraction_sum", peaks[peaks["Label"].str.contains("def", case=False)]["Area_fraction"].sum(), "-", peaks_rel)
@@ -96,10 +96,10 @@ def collect_xps(root: Path, rows: list[dict[str, object]]) -> None:
 
 
 def collect_cv(root: Path, rows: list[dict[str, object]]) -> None:
-    peaks_rel = "data/processed/CV/Figure2c_peak_summary.csv"
-    b_rel = "data/processed/CV/Figure2d_b_values.csv"
-    frac_rel = "data/processed/CV/Figure3c_fractional_capacitive.csv"
-    qkpca_rel = "data/processed/CV/Figure4b_QKPCA_coordinates.csv"
+    peaks_rel = "data/processed/CV/CV_peak_summary.csv"
+    b_rel = "data/processed/CV/CV_b_values.csv"
+    frac_rel = "data/processed/CV/CV_fractional_capacitive.csv"
+    qkpca_rel = "data/processed/CV/CV_QKPCA_coordinates.csv"
     peaks = pd.read_csv(root / peaks_rel)
     bvals = pd.read_csv(root / b_rel)
     frac = pd.read_csv(root / frac_rel)
@@ -112,7 +112,7 @@ def collect_cv(root: Path, rows: list[dict[str, object]]) -> None:
 
 
 def collect_gcd(root: Path, rows: list[dict[str, object]]) -> None:
-    rel = "data/processed/GCD/tables/Table_S3_hBN_GCD_bounded_fit_summary_final.csv"
+    rel = "data/processed/GCD/tables/hBN_GCD_bounded_fit_summary_final.csv"
     df = pd.read_csv(root / rel)
     add_descriptor(rows, "GCD", "Csp_base_mean_F_g-1", df["Csp_base_F_g^-1"].mean(), "F g^-1", rel)
     add_descriptor(rows, "GCD", "Csp_base_max_F_g-1", df["Csp_base_F_g^-1"].max(), "F g^-1", rel)

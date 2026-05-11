@@ -77,7 +77,7 @@ def main():
     summary.to_csv(TAB_DIR / "hBN_GCD_fit_summary_refit_auxiliary.csv", index=False)
     summary.to_excel(TAB_DIR / "hBN_GCD_fit_summary_refit_auxiliary.xlsx", index=False)
 
-    final_table = TAB_DIR / "Table_S3_hBN_GCD_bounded_fit_summary_final.csv"
+    final_table = TAB_DIR / "hBN_GCD_bounded_fit_summary_final.csv"
     if final_table.exists():
         manuscript_summary = pd.read_csv(final_table)
         manuscript_summary.to_csv(TAB_DIR / "hBN_GCD_fit_summary_J1_to_J5.csv", index=False)
@@ -88,7 +88,7 @@ def main():
         summary.to_excel(TAB_DIR / "hBN_GCD_fit_summary_J1_to_J5.xlsx", index=False)
         plot_fit_summary(summary, FIG_DIR)
 
-    print("Finished bounded fitting summary and auto-scale Figure 6f export.")
+    print("Finished bounded fitting summary and auto-scaled GCD summary export.")
 
 if __name__ == "__main__":
     main()

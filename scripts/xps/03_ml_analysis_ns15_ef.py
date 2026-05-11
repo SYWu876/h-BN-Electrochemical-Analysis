@@ -29,7 +29,7 @@ pca = PCA(n_components=2)
 scores = pca.fit_transform(X)
 ml_df["PC1"] = scores[:, 0]
 ml_df["PC2"] = scores[:, 1]
-ml_df.to_csv(OUT_DATA / "Table_X1_corrected_13peak_descriptor_matrix.csv", index=False)
+ml_df.to_csv(OUT_DATA / "XPS_corrected_13peak_descriptor_matrix.csv", index=False)
 
 plt.rcParams.update({
     "font.family": "DejaVu Sans",
@@ -56,8 +56,8 @@ for spine in ax.spines.values():
     spine.set_linewidth(2.0)
 ax.text(-0.14, 1.04, "(e)", transform=ax.transAxes, fontsize=30, ha="left", va="top")
 plt.tight_layout()
-plt.savefig(OUT_FIG / "Figure_NS15e_XPS_PCA_corrected_13peaks_symbols_only.png", dpi=600, bbox_inches="tight", facecolor="white")
-plt.savefig(OUT_FIG / "Figure_NS15e_XPS_PCA_corrected_13peaks_symbols_only.pdf", dpi=600, bbox_inches="tight", facecolor="white")
+plt.savefig(OUT_FIG / "XPS_PCA_corrected_13peaks_symbols_only.png", dpi=600, bbox_inches="tight", facecolor="white")
+plt.savefig(OUT_FIG / "XPS_PCA_corrected_13peaks_symbols_only.pdf", dpi=600, bbox_inches="tight", facecolor="white")
 plt.close(fig)
 
 # NS15(e) labeled
@@ -85,8 +85,8 @@ for spine in ax.spines.values():
     spine.set_linewidth(2.0)
 ax.text(-0.14, 1.04, "(e)", transform=ax.transAxes, fontsize=30, ha="left", va="top")
 plt.tight_layout()
-plt.savefig(OUT_FIG / "Figure_NS15e_XPS_PCA_corrected_13peaks_with_labels.png", dpi=600, bbox_inches="tight", facecolor="white")
-plt.savefig(OUT_FIG / "Figure_NS15e_XPS_PCA_corrected_13peaks_with_labels.pdf", dpi=600, bbox_inches="tight", facecolor="white")
+plt.savefig(OUT_FIG / "XPS_PCA_corrected_13peaks_with_labels.png", dpi=600, bbox_inches="tight", facecolor="white")
+plt.savefig(OUT_FIG / "XPS_PCA_corrected_13peaks_with_labels.pdf", dpi=600, bbox_inches="tight", facecolor="white")
 plt.close(fig)
 
 # NS15(f) clustered heat map
@@ -119,8 +119,8 @@ cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
 cbar.set_label("Standardized descriptor value", fontsize=16)
 cbar.ax.tick_params(labelsize=12, width=1.2, length=4, direction="in")
 plt.tight_layout()
-plt.savefig(OUT_FIG / "Figure_NS15f_XPS_clustered_heatmap_corrected_13peaks.png", dpi=600, bbox_inches="tight", facecolor="white")
-plt.savefig(OUT_FIG / "Figure_NS15f_XPS_clustered_heatmap_corrected_13peaks.pdf", dpi=600, bbox_inches="tight", facecolor="white")
+plt.savefig(OUT_FIG / "XPS_clustered_heatmap_corrected_13peaks.png", dpi=600, bbox_inches="tight", facecolor="white")
+plt.savefig(OUT_FIG / "XPS_clustered_heatmap_corrected_13peaks.pdf", dpi=600, bbox_inches="tight", facecolor="white")
 plt.close(fig)
 
 print("Saved processed data and figures to:")
