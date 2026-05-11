@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import importlib.util
 import os
 import py_compile
 import re
@@ -9,10 +10,21 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_TIMEOUT_SECONDS = 120
 FULL_PIPELINE_TIMEOUT_SECONDS = 360
+
+
+def load_integrated_module():
+    script = ROOT / "scripts" / "integrated" / "00_build_cross_domain_evidence.py"
+    spec = importlib.util.spec_from_file_location("build_cross_domain_evidence", script)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_readme_and_citation_contact_email_match() -> None:
@@ -64,9 +76,16 @@ def test_integrated_domain_archive_files_are_present() -> None:
         "data/processed/integrated/hBN_cross_domain_heatmap_matrix.csv",
         "data/processed/integrated/hBN_cross_domain_pca_projection.csv",
         "data/processed/integrated/hBN_cross_domain_pca_loadings.csv",
+        "data/processed/EIS/classical_fit/hBN_EIS_final_fit_parameters.csv",
+        "data/processed/EIS/quantum_branches/hBN_parameter_deviations.csv",
+        "data/processed/CV/CV_b_values.csv",
+        "data/processed/CV/CV_fractional_capacitive.csv",
+        "data/processed/CV/CV_QKPCA_coordinates.csv",
         "data/processed/Raman/raman_fit_summary.csv",
+        "data/processed/Raman/raman_local_descriptors_and_segmentation.csv",
         "data/processed/TEM/TEM_descriptors.csv",
         "data/processed/XPS/XPS_13_peak_assignments.csv",
+        "data/processed/XPS/XPS_corrected_13peak_descriptor_matrix.csv",
         "data/raw/TEM/roi_boxes_template.csv",
         "data/raw/XPS/HBN.xlsx",
         "docs/Note_S7_Raman_GitHub.md",
@@ -132,6 +151,49 @@ def test_integrated_domain_archive_files_are_present() -> None:
     tem_image = ROOT / "data" / "raw" / "TEM" / "OneView 200kV 800kX 39972.jpg"
     assert tem_image.exists()
     assert tem_image.stat().st_size > 0
+
+
+def test_integrated_heatmap_validation_errors_are_clear(tmp_path: Path) -> None:
+    module = load_integrated_module()
+    rows = []
+    for domain in module.DOMAINS:
+        for idx in range(module.EXPECTED_DESCRIPTORS_PER_DOMAIN):
+            rows.append(
+                {
+                    "domain": domain,
+                    "descriptor": f"descriptor_{idx + 1}",
+                    "value": float(idx + 1),
+                    "unit": "-",
+                    "source_path": f"data/processed/{domain}/source.csv",
+                    "note": "",
+                }
+            )
+
+    valid_df = module.pd.DataFrame(rows)
+    heatmap = module.build_heatmap_matrix(valid_df)
+    assert heatmap.shape == (len(module.DOMAINS), module.EXPECTED_DESCRIPTORS_PER_DOMAIN)
+
+    missing_domain_df = valid_df[valid_df["domain"] != "EIS"]
+    with pytest.raises(ValueError, match="Missing cross-domain descriptor rows.*EIS"):
+        module.build_heatmap_matrix(missing_domain_df)
+
+    uneven_df = valid_df[
+        ~((valid_df["domain"] == "CV") & (valid_df["descriptor"] == "descriptor_4"))
+    ]
+    with pytest.raises(ValueError, match="Expected 4 descriptors for domain CV, found 3"):
+        module.build_heatmap_matrix(uneven_df)
+
+    one_component_projection = module.pd.DataFrame(
+        {
+            "domain": ["TEM", "Raman"],
+            "PC1": [0.25, -0.25],
+            "explained_variance_ratio_PC1": [1.0, 1.0],
+            "explained_variance_ratio_PC2": [module.np.nan, module.np.nan],
+        }
+    )
+    one_axis_heatmap = module.pd.DataFrame({"descriptor_1": [-1.0, 1.0]}, index=["TEM", "Raman"])
+    module.make_figures(one_axis_heatmap, one_component_projection, tmp_path)
+    assert (tmp_path / "hBN_cross_domain_pca.png").exists()
 
 
 def test_package_excludes_cache_and_os_metadata() -> None:
