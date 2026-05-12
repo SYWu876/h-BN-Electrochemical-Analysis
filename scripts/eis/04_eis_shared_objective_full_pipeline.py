@@ -26,7 +26,7 @@ reproducibility and review, not for claiming quantum advantage.
 
 Example
 -------
-python 04_eis_shared_objective_full_pipeline.py \
+python scripts/eis/04_eis_shared_objective_full_pipeline.py \
     --input data/raw/EIS/hbn_EIS_1.csv \
     --output outputs/eis_shared_objective \
     --trust-delta 0.08 \

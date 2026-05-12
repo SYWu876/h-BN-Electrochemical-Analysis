@@ -10,7 +10,7 @@ This package is intended as a **GitHub-ready companion archive** for manuscript 
 
 - raw experimental files for **TEM, Raman, XPS, CV, GCD, and EIS**
 - processed CSV tables used to support structural, spectroscopic, and electrochemical analysis
-- Python scripts for rebuilding selected **TEM, Raman, XPS, CV, GCD, and EIS** outputs
+- Python scripts and notebooks for rebuilding selected **TEM, Raman, XPS, CV, GCD, EIS, and QC circuit** outputs
 - repository metadata, license files, smoke tests, and CI configuration
 - a regenerated machine-readable file manifest and checksums for archive integrity
 
@@ -42,15 +42,14 @@ hBN_GitHub_Package_final/
 |       |-- TEM/
 |       `-- XPS/
 |-- scripts/
+|   |-- QC Circuit/
 |   |-- cv/
+|   |-- eis/
 |   |-- gcd/
+|   |-- integrated/
 |   |-- raman/
 |   |-- tem/
-|   |-- xps/
-|   |-- 01_eis_classical_anchor_fit.py
-|   |-- 02_eis_quantum_comparison_from_anchor.py
-|   |-- 03_eis_surrogate_qaoa_landscape.py
-|   `-- 04_eis_shared_objective_full_pipeline.py
+|   `-- xps/
 |-- tests/
 `-- docs/
     |-- manifest.csv
@@ -91,11 +90,11 @@ CSV tables prepared for plotting, fitting summaries, and manuscript-linked inter
 
 ### `scripts/`
 
-Python scripts included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. Cross-domain evidence tables are rebuilt from `scripts/integrated/`. EIS scripts remain at the top level because they are the manuscript's quantum-assisted comparison branch.
+Python scripts and notebooks included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/eis/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. Cross-domain evidence tables are rebuilt from `scripts/integrated/`, and the interactive GCD/EIS quantum-circuit schematic notebook is stored under `scripts/QC Circuit/`.
 
-The first three EIS scripts are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
+The first three EIS scripts in `scripts/eis/` are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `scripts/eis/02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `scripts/eis/03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
 
-For the full EIS shared-objective workflow, use `04_eis_shared_objective_full_pipeline.py`. It starts from the raw EIS spectrum, performs the classical anchor fit, builds the local surrogate, evaluates the QAOA-compatible landscape, decodes the discrete branch, and writes the manuscript EIS surrogate slices, including `R1_Q1_slice.csv` and `Rs_alpha1_slice.csv`, to the selected output directory.
+For the full EIS shared-objective workflow, use `scripts/eis/04_eis_shared_objective_full_pipeline.py`. It starts from the raw EIS spectrum, performs the classical anchor fit, builds the local surrogate, evaluates the QAOA-compatible landscape, decodes the discrete branch, and writes the manuscript EIS surrogate slices, including `R1_Q1_slice.csv` and `Rs_alpha1_slice.csv`, to the selected output directory.
 
 All EIS surrogate slices used in the manuscript can be regenerated from the full shared-objective pipeline.
 
@@ -121,11 +120,13 @@ python scripts/raman/02_plot_raman_ns14d_schematic.py
 python scripts/tem/00_tem_patch_ensemble_analysis.py --repo-root . --source-image "data/raw/TEM/OneView 200kV 800kX 39972.jpg" --roi-csv data/raw/TEM/roi_boxes_template.csv
 python scripts/xps/04_run_xps_pipeline.py
 python scripts/integrated/00_build_cross_domain_evidence.py --repo-root .
-python scripts/01_eis_classical_anchor_fit.py
-python scripts/02_eis_quantum_comparison_from_anchor.py
-python scripts/03_eis_surrogate_qaoa_landscape.py
-python scripts/04_eis_shared_objective_full_pipeline.py --input data/raw/EIS/hbn_EIS_1.csv --output outputs/eis_shared_objective
+python scripts/eis/01_eis_classical_anchor_fit.py
+python scripts/eis/02_eis_quantum_comparison_from_anchor.py
+python scripts/eis/03_eis_surrogate_qaoa_landscape.py
+python scripts/eis/04_eis_shared_objective_full_pipeline.py --input data/raw/EIS/hbn_EIS_1.csv --output outputs/eis_shared_objective
 ```
+
+The GCD/EIS quantum-circuit schematic notebook can be opened interactively from `scripts/QC Circuit/generate_gcd_eis_qc_circuits.ipynb`.
 
 The committed archive includes the manuscript-facing CSV tables. Generated figures and local rerun outputs are written to ignored output paths where possible, so they can be recreated locally without becoming part of the tracked archive.
 
@@ -137,6 +138,7 @@ The study is organized around structural/spectroscopic inputs and three electroc
 - **CV**: peak-current scaling, power-law `b`-value analysis, Dunn-type current separation, Ising-type kinetic segmentation, and Q-KPCA embedding
 - **GCD**: preprocessing diagnostics, QAOA-based stable-window selection, bounded physics-informed fitting, final manuscript summary, and auto-scaled GCD summary regeneration
 - **EIS**: compact classical anchor fit and comparison with continuous and discrete quantum-assisted inference under a shared complex-domain objective
+- **QC circuit schematics**: interactive notebook generation of the GCD and EIS quantum-circuit figures used to document the hybrid workflows
 - **Integrated evidence**: conservative descriptor matrix, heatmap table, and exploratory PCA projection assembled only from committed processed tables
 
 The full file-to-analysis mapping is listed in `docs/manifest.csv`.
