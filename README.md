@@ -18,46 +18,46 @@ This package is intended as a **GitHub-ready companion archive** for manuscript 
 
 ```text
 hBN_GitHub_Package_final/
-|-- README.md
 |-- CITATION.cff
-|-- LICENSE
 |-- DATA_LICENSE.md
+|-- LICENSE
 |-- NOTICE
-|-- requirements.txt
+|-- README.md
 |-- requirements-dev.txt
+|-- requirements.txt
 |-- data/
-|   |-- raw/
+|   |-- processed/
 |   |   |-- CV/
-|   |   |-- GCD/
+|   |   |-- CV_segmentation/
 |   |   |-- EIS/
+|   |   |-- GCD/
 |   |   |-- Raman/
 |   |   |-- TEM/
 |   |   `-- XPS/
-|   `-- processed/
+|   `-- raw/
 |       |-- CV/
-|       |-- CV_segmentation/
-|       |-- GCD/
 |       |-- EIS/
+|       |-- GCD/
 |       |-- Raman/
 |       |-- TEM/
 |       `-- XPS/
+|-- docs/
+|   |-- checksums.sha256
+|   |-- manifest.csv
+|   |-- Note_S7_Raman_GitHub.md
+|   |-- Note_S9_GitHub_v4.md
+|   |-- README_TEM_reproducibility.md
+|   `-- XPS_REPRODUCIBILITY_NOTES.md
 |-- scripts/
-|   |-- QC Circuit/
 |   |-- cv/
 |   |-- eis/
 |   |-- gcd/
 |   |-- integrated/
+|   |-- qc_circuit/
 |   |-- raman/
 |   |-- tem/
 |   `-- xps/
-|-- tests/
-`-- docs/
-    |-- manifest.csv
-    |-- checksums.sha256
-    |-- Note_S7_Raman_GitHub.md
-    |-- Note_S9_GitHub_v4.md
-    |-- README_TEM_reproducibility.md
-    `-- XPS_REPRODUCIBILITY_NOTES.md
+`-- tests/
 ```
 
 ## What is in each folder?
@@ -90,7 +90,7 @@ CSV tables prepared for plotting, fitting summaries, and manuscript-linked inter
 
 ### `scripts/`
 
-Python scripts and notebooks included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/eis/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. Cross-domain evidence tables are rebuilt from `scripts/integrated/`, and the interactive GCD/EIS quantum-circuit schematic notebook is stored under `scripts/QC Circuit/`.
+Python scripts and notebooks included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/eis/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. Cross-domain evidence tables are rebuilt from `scripts/integrated/`, and the interactive GCD/EIS quantum-circuit schematic notebook is stored under `scripts/qc_circuit/`.
 
 The first three EIS scripts in `scripts/eis/` are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `scripts/eis/02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `scripts/eis/03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
 
@@ -126,7 +126,7 @@ python scripts/eis/03_eis_surrogate_qaoa_landscape.py
 python scripts/eis/04_eis_shared_objective_full_pipeline.py --input data/raw/EIS/hbn_EIS_1.csv --output outputs/eis_shared_objective
 ```
 
-The GCD/EIS quantum-circuit schematic notebook can be opened interactively from `scripts/QC Circuit/generate_gcd_eis_qc_circuits.ipynb`.
+The GCD/EIS quantum-circuit schematic notebook can be opened interactively from `scripts/qc_circuit/generate_gcd_eis_qc_circuits.ipynb`.
 
 The committed archive includes the manuscript-facing CSV tables. Generated figures and local rerun outputs are written to ignored output paths where possible, so they can be recreated locally without becoming part of the tracked archive.
 
