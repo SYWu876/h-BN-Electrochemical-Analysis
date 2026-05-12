@@ -63,8 +63,8 @@ def test_analysis_scripts_compile(tmp_path: Path) -> None:
 
 def test_integrated_domain_archive_files_are_present() -> None:
     expected_paths = [
-        "scripts/QC Circuit/README.md",
-        "scripts/QC Circuit/generate_gcd_eis_qc_circuits.ipynb",
+        "scripts/qc_circuit/README.md",
+        "scripts/qc_circuit/generate_gcd_eis_qc_circuits.ipynb",
         "scripts/cv/00_run_all_cv_analysis.py",
         "scripts/eis/01_eis_classical_anchor_fit.py",
         "scripts/eis/02_eis_quantum_comparison_from_anchor.py",
@@ -162,7 +162,7 @@ def test_integrated_domain_archive_files_are_present() -> None:
 
 def test_qc_circuit_notebook_is_manuscript_facing() -> None:
     notebook = json.loads(
-        (ROOT / "scripts" / "QC Circuit" / "generate_gcd_eis_qc_circuits.ipynb").read_text(
+        (ROOT / "scripts" / "qc_circuit" / "generate_gcd_eis_qc_circuits.ipynb").read_text(
             encoding="utf-8"
         )
     )
@@ -174,10 +174,13 @@ def test_qc_circuit_notebook_is_manuscript_facing() -> None:
     assert "從 PPT" not in text
     assert "投影片" not in text
     assert "placeholder" not in text.lower()
+    assert "%pip install" not in text
+    assert "scripts/" + "QC Circuit" not in text
 
     code_cells = [cell for cell in notebook["cells"] if cell.get("cell_type") == "code"]
     assert code_cells
     assert all(not cell.get("outputs") for cell in code_cells)
+    assert all("execution" not in cell.get("metadata", {}) for cell in code_cells)
 
 
 def test_integrated_heatmap_validation_errors_are_clear(tmp_path: Path) -> None:
