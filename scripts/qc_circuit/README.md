@@ -14,3 +14,9 @@ The notebook builds four circuit figures:
 - EIS 21-qubit QUBO/QAOA circuit for 3-bit encoding of seven EIS parameters
 
 The notebook keeps bounded decoding, objective evaluation, and optimizer updates as classical helper steps outside the quantum gate sequence. Run the cells from top to bottom in Jupyter to regenerate the figures interactively.
+
+Install the top-level repository requirements before opening the notebook:
+
+```bash
+python -m pip install -r requirements.txt
+```
