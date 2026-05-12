@@ -10,7 +10,7 @@ This package is intended as a **GitHub-ready companion archive** for manuscript 
 
 - raw experimental files for **TEM, Raman, XPS, CV, GCD, and EIS**
 - processed CSV tables used to support structural, spectroscopic, and electrochemical analysis
-- Python scripts for rebuilding selected **TEM, Raman, XPS, CV, GCD, and EIS** outputs
+- Python scripts and notebooks for rebuilding selected **TEM, Raman, XPS, CV, GCD, EIS, and QC circuit** outputs
 - repository metadata, license files, smoke tests, and CI configuration
 - a regenerated machine-readable file manifest and checksums for archive integrity
 
@@ -42,6 +42,7 @@ hBN_GitHub_Package_final/
 |       |-- TEM/
 |       `-- XPS/
 |-- scripts/
+|   |-- QC Circuit/
 |   |-- cv/
 |   |-- eis/
 |   |-- gcd/
@@ -89,7 +90,7 @@ CSV tables prepared for plotting, fitting summaries, and manuscript-linked inter
 
 ### `scripts/`
 
-Python scripts included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/eis/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. Cross-domain evidence tables are rebuilt from `scripts/integrated/`.
+Python scripts and notebooks included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/eis/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. Cross-domain evidence tables are rebuilt from `scripts/integrated/`, and the interactive GCD/EIS quantum-circuit schematic notebook is stored under `scripts/QC Circuit/`.
 
 The first three EIS scripts in `scripts/eis/` are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `scripts/eis/02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `scripts/eis/03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
 
@@ -125,6 +126,8 @@ python scripts/eis/03_eis_surrogate_qaoa_landscape.py
 python scripts/eis/04_eis_shared_objective_full_pipeline.py --input data/raw/EIS/hbn_EIS_1.csv --output outputs/eis_shared_objective
 ```
 
+The GCD/EIS quantum-circuit schematic notebook can be opened interactively from `scripts/QC Circuit/generate_gcd_eis_qc_circuits.ipynb`.
+
 The committed archive includes the manuscript-facing CSV tables. Generated figures and local rerun outputs are written to ignored output paths where possible, so they can be recreated locally without becoming part of the tracked archive.
 
 ## Manuscript-level analysis map
@@ -135,6 +138,7 @@ The study is organized around structural/spectroscopic inputs and three electroc
 - **CV**: peak-current scaling, power-law `b`-value analysis, Dunn-type current separation, Ising-type kinetic segmentation, and Q-KPCA embedding
 - **GCD**: preprocessing diagnostics, QAOA-based stable-window selection, bounded physics-informed fitting, final manuscript summary, and auto-scaled GCD summary regeneration
 - **EIS**: compact classical anchor fit and comparison with continuous and discrete quantum-assisted inference under a shared complex-domain objective
+- **QC circuit schematics**: interactive notebook generation of the GCD and EIS quantum-circuit figures used to document the hybrid workflows
 - **Integrated evidence**: conservative descriptor matrix, heatmap table, and exploratory PCA projection assembled only from committed processed tables
 
 The full file-to-analysis mapping is listed in `docs/manifest.csv`.
