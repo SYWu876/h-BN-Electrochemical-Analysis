@@ -43,14 +43,16 @@ hBN_GitHub_Package_final/
 |       `-- XPS/
 |-- scripts/
 |   |-- cv/
+|   |-- eis/
+|   |   |-- 01_eis_classical_anchor_fit.py
+|   |   |-- 02_eis_quantum_comparison_from_anchor.py
+|   |   |-- 03_eis_surrogate_qaoa_landscape.py
+|   |   `-- 04_eis_shared_objective_full_pipeline.py
 |   |-- gcd/
+|   |-- integrated/
 |   |-- raman/
 |   |-- tem/
-|   |-- xps/
-|   |-- 01_eis_classical_anchor_fit.py
-|   |-- 02_eis_quantum_comparison_from_anchor.py
-|   |-- 03_eis_surrogate_qaoa_landscape.py
-|   `-- 04_eis_shared_objective_full_pipeline.py
+|   `-- xps/
 |-- tests/
 `-- docs/
     |-- manifest.csv
@@ -91,11 +93,11 @@ CSV tables prepared for plotting, fitting summaries, and manuscript-linked inter
 
 ### `scripts/`
 
-Python scripts included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. Cross-domain evidence tables are rebuilt from `scripts/integrated/`. EIS scripts remain at the top level because they are the manuscript's quantum-assisted comparison branch.
+Python scripts included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/eis/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. Cross-domain evidence tables are rebuilt from `scripts/integrated/`.
 
-The first three EIS scripts are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
+The first three EIS scripts in `scripts/eis/` are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `scripts/eis/02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `scripts/eis/03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
 
-For the full EIS shared-objective workflow, use `04_eis_shared_objective_full_pipeline.py`. It starts from the raw EIS spectrum, performs the classical anchor fit, builds the local surrogate, evaluates the QAOA-compatible landscape, decodes the discrete branch, and writes the manuscript EIS surrogate slices, including `R1_Q1_slice.csv` and `Rs_alpha1_slice.csv`, to the selected output directory.
+For the full EIS shared-objective workflow, use `scripts/eis/04_eis_shared_objective_full_pipeline.py`. It starts from the raw EIS spectrum, performs the classical anchor fit, builds the local surrogate, evaluates the QAOA-compatible landscape, decodes the discrete branch, and writes the manuscript EIS surrogate slices, including `R1_Q1_slice.csv` and `Rs_alpha1_slice.csv`, to the selected output directory.
 
 All EIS surrogate slices used in the manuscript can be regenerated from the full shared-objective pipeline.
 
@@ -121,10 +123,10 @@ python scripts/raman/02_plot_raman_ns14d_schematic.py
 python scripts/tem/00_tem_patch_ensemble_analysis.py --repo-root . --source-image "data/raw/TEM/OneView 200kV 800kX 39972.jpg" --roi-csv data/raw/TEM/roi_boxes_template.csv
 python scripts/xps/04_run_xps_pipeline.py
 python scripts/integrated/00_build_cross_domain_evidence.py --repo-root .
-python scripts/01_eis_classical_anchor_fit.py
-python scripts/02_eis_quantum_comparison_from_anchor.py
-python scripts/03_eis_surrogate_qaoa_landscape.py
-python scripts/04_eis_shared_objective_full_pipeline.py --input data/raw/EIS/hbn_EIS_1.csv --output outputs/eis_shared_objective
+python scripts/eis/01_eis_classical_anchor_fit.py
+python scripts/eis/02_eis_quantum_comparison_from_anchor.py
+python scripts/eis/03_eis_surrogate_qaoa_landscape.py
+python scripts/eis/04_eis_shared_objective_full_pipeline.py --input data/raw/EIS/hbn_EIS_1.csv --output outputs/eis_shared_objective
 ```
 
 The committed archive includes the manuscript-facing CSV tables. Generated figures and local rerun outputs are written to ignored output paths where possible, so they can be recreated locally without becoming part of the tracked archive.

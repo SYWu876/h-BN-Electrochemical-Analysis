@@ -39,10 +39,10 @@ def test_readme_and_citation_contact_email_match() -> None:
     assert readme_match.group(1) in citation_emails, (
         f"README email {readme_match.group(1)!r} was not found in CITATION emails {citation_emails!r}"
     )
-    assert "scripts/01_eis_classical_anchor_fit.py" in readme_text
-    assert "scripts/02_eis_quantum_comparison_from_anchor.py" in readme_text
-    assert "scripts/03_eis_surrogate_qaoa_landscape.py" in readme_text
-    assert "scripts/04_eis_shared_objective_full_pipeline.py" in readme_text
+    assert "scripts/eis/01_eis_classical_anchor_fit.py" in readme_text
+    assert "scripts/eis/02_eis_quantum_comparison_from_anchor.py" in readme_text
+    assert "scripts/eis/03_eis_surrogate_qaoa_landscape.py" in readme_text
+    assert "scripts/eis/04_eis_shared_objective_full_pipeline.py" in readme_text
     assert "scripts/cv/" in readme_text
     assert "scripts/gcd/" in readme_text
     assert "scripts/raman/" in readme_text
@@ -63,6 +63,10 @@ def test_analysis_scripts_compile(tmp_path: Path) -> None:
 def test_integrated_domain_archive_files_are_present() -> None:
     expected_paths = [
         "scripts/cv/00_run_all_cv_analysis.py",
+        "scripts/eis/01_eis_classical_anchor_fit.py",
+        "scripts/eis/02_eis_quantum_comparison_from_anchor.py",
+        "scripts/eis/03_eis_surrogate_qaoa_landscape.py",
+        "scripts/eis/04_eis_shared_objective_full_pipeline.py",
         "scripts/gcd/00_run_all_gcd_analysis.py",
         "scripts/integrated/00_build_cross_domain_evidence.py",
         "scripts/raman/01_raman_analysis_pipeline.py",
@@ -248,18 +252,18 @@ def test_eis_scripts_write_outputs_in_temporary_project(tmp_path: Path) -> None:
     shutil.copy2(ROOT / "data" / "raw" / "EIS" / "hbn_EIS_1.csv", raw_eis / "hbn_EIS_1.csv")
 
     expected_outputs = {
-        "01_eis_classical_anchor_fit.py": [
+        "eis/01_eis_classical_anchor_fit.py": [
             "data/processed/EIS/classical_fit/hBN_EIS_final_fitting_curve.csv",
             "data/processed/EIS/classical_fit/hBN_EIS_final_fit_parameters.csv",
             "data/processed/EIS/classical_fit/hBN_EIS_residuals_final_model.csv",
         ],
-        "02_eis_quantum_comparison_from_anchor.py": [
+        "eis/02_eis_quantum_comparison_from_anchor.py": [
             "data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_parameters.csv",
             "data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_metrics.csv",
             "data/processed/EIS/quantum_branches/hBN_EIS_quantum_branch_overlays.csv",
             "data/processed/EIS/quantum_branches/hBN_parameter_deviations.csv",
         ],
-        "03_eis_surrogate_qaoa_landscape.py": [
+        "eis/03_eis_surrogate_qaoa_landscape.py": [
             "data/processed/EIS/qaoa_landscapes/hBN_surrogate_slice.csv",
             "data/processed/EIS/qaoa_landscapes/hBN_qaoa_coarse_landscape.csv",
             "data/processed/EIS/qaoa_landscapes/hBN_qaoa_refined_landscape.csv",
@@ -327,7 +331,7 @@ def test_full_shared_objective_pipeline_writes_manuscript_slices(tmp_path: Path)
         result = subprocess.run(
             [
                 sys.executable,
-                str(project / "scripts" / "04_eis_shared_objective_full_pipeline.py"),
+                str(project / "scripts" / "eis" / "04_eis_shared_objective_full_pipeline.py"),
                 "--input",
                 "data/raw/EIS/hbn_EIS_1.csv",
                 "--output",
@@ -385,7 +389,7 @@ def test_full_shared_objective_pipeline_rejects_invalid_cli_values(tmp_path: Pat
         result = subprocess.run(
             [
                 sys.executable,
-                str(ROOT / "scripts" / "04_eis_shared_objective_full_pipeline.py"),
+                str(ROOT / "scripts" / "eis" / "04_eis_shared_objective_full_pipeline.py"),
                 "--input",
                 str(ROOT / "data" / "raw" / "EIS" / "hbn_EIS_1.csv"),
                 "--output",
