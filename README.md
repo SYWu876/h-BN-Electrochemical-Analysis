@@ -44,10 +44,6 @@ hBN_GitHub_Package_final/
 |-- scripts/
 |   |-- cv/
 |   |-- eis/
-|   |   |-- 01_eis_classical_anchor_fit.py
-|   |   |-- 02_eis_quantum_comparison_from_anchor.py
-|   |   |-- 03_eis_surrogate_qaoa_landscape.py
-|   |   `-- 04_eis_shared_objective_full_pipeline.py
 |   |-- gcd/
 |   |-- integrated/
 |   |-- raman/

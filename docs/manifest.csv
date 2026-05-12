@@ -6,7 +6,7 @@ package_path,category,analysis_family,file_type,size_bytes,description,sha256
 "DATA_LICENSE.md","license","license",md,498,"CC BY 4.0 license notice for data, image artifacts, and documentation",e5aca68a36a3ae7331d7bc37c5f1ebe68fe2c7faab539c00f8b2f7c50fdb825e
 "LICENSE","license","license",,1086,"MIT license for source code",367160b8eac41249c24cfda5d51cc9ae0778488a24aeae35f4427f41ef92d058
 "NOTICE","license","license",,321,"Path-level license scope notice",436181739bf70b79b13592dfa5d543ca316467bae0475f56ad8de208838f75d3
-"README.md",metadata,"repository",md,8654,"Repository file",69be53a0d37e6f043cb573b7313b89f73316e3536bf0b8c16e0db61bf9207a6b
+"README.md",metadata,"repository",md,8458,"Repository file",0c7c9415fcadc7609e5a8d92160f39b4e457bf722ff5da66b7184bcecfa46cea
 "data/processed/CV/Dunn_separation_maintext_matched_data.csv","processed",CV,csv,114154,"Processed CV descriptor or figure-facing table",efd5977621824fcb2a02b980f8477770a0c994e07e9f3bd74f651b2b09d8fee4
 "data/processed/CV/CV_peak_summary.csv","processed",CV,csv,415,"Processed CV descriptor or figure-facing table",fab3020dbd794ca3b9ab6e8008ee7752f277aba21e35ccb7c8f58cd348486c49
 "data/processed/CV/CV_b_values.csv","processed",CV,csv,47483,"Processed CV descriptor or figure-facing table",5f2c25b294b665f9c43118ac6d3abc66a33f3f5c1261052bc8a6e4049c6c1dfa
