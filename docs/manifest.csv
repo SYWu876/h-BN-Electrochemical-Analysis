@@ -148,7 +148,7 @@ package_path,category,analysis_family,file_type,size_bytes,description,sha256
 "scripts/gcd/gcd_utils.py","script","analysis",py,20864,"Python analysis script",6e679fa5b68e3fcc1a804bc9c8507b80c26e132d698d902c18d71d6f081a7d15
 "scripts/integrated/00_build_cross_domain_evidence.py","script","analysis",py,11805,"Python analysis script",4561bc50aece63f5cbb18c2188a786e9909ab8becb8da253e77adb84ecc5a7a5
 "scripts/raman/01_raman_analysis_pipeline.py","script","analysis",py,9269,"Python analysis script",6283d3e8f686671e9d3bdb7869211c90b5e4a89f74f2bd958d5c4cffdef849b8
-"scripts/raman/02_plot_raman_ns14d_schematic.py","script","analysis",py,4618,"Python analysis script",63e86541d3e2300608c7d243ba22819e4ac0511694e2d6ee08054cadb2dd434c
+"scripts/raman/02_plot_raman_ns14d_schematic.py","script","analysis",py,4492,"Python analysis script",0f8b266e405c1450bda07bcd4e4f0006322f77d82e421ec9feda6f4f17f44e8b
 "scripts/tem/00_tem_patch_ensemble_analysis.py","script","analysis",py,25180,"Python analysis script",3a200ae6ae0e096f2e9d7779c689e7c569161956557956e10460f26bb45a120b
 "scripts/xps/01_make_table_x.py","script","analysis",py,314,"Python analysis script",6771cffd69f95ea590e8935cbd325492aee1b0dea66edbbcd89bcee3e2151bbc
 "scripts/xps/02_profile_fit_ns15_abcd.py","script","analysis",py,4008,"Python analysis script",54c6af1e7137e766af1c7477c8b98db2d34469e594517fc5fb3b2f02c173d547

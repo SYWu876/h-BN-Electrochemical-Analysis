@@ -80,20 +80,19 @@ def main():
 
     add_box(
         ax,
-        0.03,
-        0.18,
-        0.34,
-        0.62,
+        0.10,
+        0.37,
+        0.20,
+        0.26,
         "Raman-derived\nheterogeneity",
         [
-            "E$_{2g}$ band retained near 1367 cm$^{-1}$",
-            "FWHM $\\approx$ 12.9 cm$^{-1}$; mild asymmetry",
-            "Peak-core / flank segmentation",
-            "Consistent with edge-, strain-, defect-, and stacking-perturbed h-BN domains",
+            "E$_{2g}$ near 1367 cm$^{-1}$",
+            "FWHM $\\approx$ 12.9 cm$^{-1}$",
+            "Core / flank heterogeneity",
         ],
-        title_fs=13.0,
-        text_fs=8.7,
-        wrap_width=48,
+        title_fs=12.3,
+        text_fs=7.8,
+        wrap_width=80,
     )
 
     add_box(
@@ -165,7 +164,7 @@ def main():
         wrap_width=34,
     )
 
-    add_arrow(ax, 0.37, 0.50, 0.43, 0.50)
+    add_arrow(ax, 0.30, 0.50, 0.43, 0.50)
     add_arrow(ax, 0.63, 0.50, 0.70, 0.79)
     add_arrow(ax, 0.63, 0.50, 0.70, 0.50)
     add_arrow(ax, 0.63, 0.50, 0.70, 0.205)
