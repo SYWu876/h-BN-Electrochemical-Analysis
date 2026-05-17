@@ -6,7 +6,7 @@ package_path,category,analysis_family,file_type,size_bytes,description,sha256
 "DATA_LICENSE.md","license","license",md,498,"CC BY 4.0 license notice for data, image artifacts, and documentation",e5aca68a36a3ae7331d7bc37c5f1ebe68fe2c7faab539c00f8b2f7c50fdb825e
 "LICENSE","license","license",,1086,"MIT license for source code",367160b8eac41249c24cfda5d51cc9ae0778488a24aeae35f4427f41ef92d058
 "NOTICE","license","license",,321,"Path-level license scope notice",436181739bf70b79b13592dfa5d543ca316467bae0475f56ad8de208838f75d3
-"README.md",metadata,"repository",md,9135,"Repository file",1026c3a894ad0c5ef3f23271bd171e529cd1a455fae8be5f0cf84d3d9e15b6f9
+"README.md",metadata,"repository",md,9249,"Repository file",af0563a1cc44fe606c33b4e9b221115affabd0dec82f916856a716fd62c37437
 "data/processed/CV/Dunn_separation_maintext_matched_data.csv","processed",CV,csv,114154,"Processed CV descriptor or figure-facing table",efd5977621824fcb2a02b980f8477770a0c994e07e9f3bd74f651b2b09d8fee4
 "data/processed/CV/CV_peak_summary.csv","processed",CV,csv,415,"Processed CV descriptor or figure-facing table",fab3020dbd794ca3b9ab6e8008ee7752f277aba21e35ccb7c8f58cd348486c49
 "data/processed/CV/CV_b_values.csv","processed",CV,csv,47483,"Processed CV descriptor or figure-facing table",5f2c25b294b665f9c43118ac6d3abc66a33f3f5c1261052bc8a6e4049c6c1dfa
@@ -125,7 +125,7 @@ package_path,category,analysis_family,file_type,size_bytes,description,sha256
 "data/raw/XPS/HBN.xlsx","raw",XPS,xlsx,110610,"Raw XPS workbook export",fe60b0b2ee4cc92dd1a6272c4752b20153dd6082689ed79138a195fb3d58561a
 "docs/GITHUB_INTEGRATION_NOTE_TEM.txt","documentation",docs,txt,1022,"Repository documentation file",f9d9afc0f955acf59ec4f65a49c9958ded339cb7f127197d34d6481d1648070b
 "docs/Note_S7_Raman_GitHub.md","documentation",docs,md,1332,"Repository documentation file",44671740af9f9a9507d361013cda0972c2c733b9eb00f5fcd37ec84c598d48b2
-"docs/Note_S9_GitHub_v4.md","documentation",docs,md,4265,"Repository documentation file",b5b4391fd629934f19c8579b1f3d7481f58b149d19f27d0ce80f75470acd0c52
+"docs/Note_S9_GitHub_v4.md","documentation",docs,md,4379,"Repository documentation file",765b404857e7a94b4463ac7b724f0a776e32a11c7c95e54bbbebaa05ccc0dea7
 "docs/README_TEM_reproducibility.md","documentation",docs,md,3775,"Repository documentation file",e7cd379d3dd2ed32be7990fd314598a986f6254b19ad49fc42f0383333619944
 "docs/XPS_REPRODUCIBILITY_NOTES.md","documentation",docs,md,826,"Repository documentation file",14ff15022557f7e013547e9f3ba537189f7d3d7b2cf410f5e50cd476c8f6bc97
 "requirements-dev.txt",metadata,"repository",txt,33,"Repository file",b2cf40cfde63ffcd654d233d12aebeb06ea2092d1cbd22aa25c34efacfcfd804
@@ -133,7 +133,7 @@ package_path,category,analysis_family,file_type,size_bytes,description,sha256
 "scripts/eis/01_eis_classical_anchor_fit.py","script","analysis",py,3688,"Python analysis script",dd51167f4279df3e90e69caf38f873fc12ec2d778902b808547ac750eac3b263
 "scripts/eis/02_eis_quantum_comparison_from_anchor.py","script","analysis",py,5304,"Python analysis script",cf1e7f36b0045c5aa4e68747bbf87d7fd65d9c6332eee69dd9004db0c44be65a
 "scripts/eis/03_eis_surrogate_qaoa_landscape.py","script","analysis",py,8012,"Python analysis script",58f6e777a5f016980b0f98edbde13c4d4a7a378cb52d40dd0958ca6ae1fd5ae2
-"scripts/eis/04_eis_shared_objective_full_pipeline.py","script","analysis",py,30786,"Python analysis script",d257822e1d50e009edf692460bdd5233a79cdc43c5153151dfab3ab509735c53
+"scripts/eis/04_eis_shared_objective_full_pipeline.py","script","analysis",py,32503,"Python analysis script",3e868b1e8478e2ea93d89cc5586aa270782994227d85d24f3b5d1ffa1109e28b
 "scripts/cv/00_run_all_cv_analysis.py","script","analysis",py,444,"Python analysis script",2bd498b42f7fb954472eefe3b1f9dbd4f06d80e069d6b2938439a23549cc012f
 "scripts/cv/01_cv_overlay.py","script","analysis",py,788,"Python analysis script",1c184eb2e15eb462d8680c9c35f84f0d734742989ab733b5e4ce6997e7bfb749
 "scripts/cv/02_current_heatmap.py","script","analysis",py,4145,"Python analysis script",4d127e0f65d812a8ab1ad1f6385c9014f3f9a2ecd13e5465473075a53a0dc3ba
@@ -155,6 +155,6 @@ package_path,category,analysis_family,file_type,size_bytes,description,sha256
 "scripts/xps/03_ml_analysis_ns15_ef.py","script","analysis",py,5728,"Python analysis script",6d7562670e54f8e8daba73d0760ac279feccb151543ccb54332ba76063ba7b96
 "scripts/xps/04_run_xps_pipeline.py","script","analysis",py,440,"Python analysis script",2b6cc16dfa59d956d8d17852d39a7d93877f5b0a2110cfef7017ff0042b89d3b
 "scripts/xps/utils_xps.py","script","analysis",py,6955,"Python analysis script",a86c94280e2cd1881dacf7314dded4e56890b4bf96ef66b10fba165934356785
-tests/test_package_smoke.py,test,test,py,21433,Pytest smoke test,23caf6d187fc25ff373454e359456aa449936cdb46dbe8629c88e2f3af6c5342
+tests/test_package_smoke.py,test,test,py,22327,Pytest smoke test,619f0fd5e03e1324e0a80df38348abe9ff968e573e6bf8400782c916d66de1aa
 "scripts/qc_circuit/README.md","script","QC_Circuit",md,849,"Interactive QC circuit notebook README",f63ccff0e4ed7669bc49d55852da9e4bbf22b02bbb335edbe6cf5f2ad0299b60
 "scripts/qc_circuit/generate_gcd_eis_qc_circuits.ipynb","script","QC_Circuit","ipynb",58058,"Interactive notebook for GCD and EIS quantum-circuit figure generation",2688a91dc7abdc50c54d48664bdf3fbc4e3a25f9686fb98edd2d1facb26797e8

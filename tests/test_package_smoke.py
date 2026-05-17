@@ -11,6 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 
@@ -467,6 +468,18 @@ def test_full_shared_objective_pipeline_writes_manuscript_slices(tmp_path: Path)
         output = output_dir / output_name
         assert output.exists(), output_name
         assert output.stat().st_size > 0, output_name
+
+    qaoa_landscape = pd.read_csv(output_dir / "qaoa_p1_landscape.csv")
+    assert set(qaoa_landscape["mode"]) == {"exact_statevector_p1"}
+    anchor_parameters = pd.read_csv(output_dir / "classical_anchor_parameters.csv")
+    rct = float(anchor_parameters.loc[anchor_parameters["parameter"] == "Rct", "classical_anchor_value"].iloc[0])
+    assert 20.0 < rct < 50.0
+    branch_loss = pd.read_csv(output_dir / "branch_loss_comparison.csv")
+    assert {"unweighted_true_SSE", "relative_weighted_SSE", "surrogate_energy"}.issubset(branch_loss.columns)
+    with (output_dir / "decoded_bitstring_summary.json").open(encoding="utf-8") as f:
+        decoded_summary = json.load(f)
+    assert decoded_summary["qaoa_summary"]["qaoa_landscape_mode"] == "exact_statevector_p1"
+    assert decoded_summary["loss_definition"] == "unweighted complex SSE over real and imaginary residuals"
 
     with (output_dir / "R1_Q1_slice.csv").open(newline="", encoding="utf-8") as f:
         assert next(csv.reader(f)) == [

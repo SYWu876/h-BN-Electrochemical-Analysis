@@ -94,7 +94,7 @@ Python scripts and notebooks included for rebuilding selected analysis products.
 
 The first three EIS scripts in `scripts/eis/` are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `scripts/eis/02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `scripts/eis/03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
 
-For the full EIS shared-objective workflow, use `scripts/eis/04_eis_shared_objective_full_pipeline.py`. It starts from the raw EIS spectrum, performs the classical anchor fit, builds the local surrogate, evaluates the QAOA-compatible landscape, decodes the discrete branch, and writes the manuscript EIS surrogate slices, including `R1_Q1_slice.csv` and `Rs_alpha1_slice.csv`, to the selected output directory.
+For the full EIS shared-objective workflow, use `scripts/eis/04_eis_shared_objective_full_pipeline.py`. It starts from the raw EIS spectrum, performs the unweighted complex least-squares classical anchor fit used for the Nyquist overlay, builds the local surrogate, evaluates an exact p=1 statevector QAOA landscape over the discretized trust-region lattice, decodes the discrete branch, and writes the manuscript EIS surrogate slices, including `R1_Q1_slice.csv` and `Rs_alpha1_slice.csv`, to the selected output directory.
 
 All EIS surrogate slices used in the manuscript can be regenerated from the full shared-objective pipeline.
 
