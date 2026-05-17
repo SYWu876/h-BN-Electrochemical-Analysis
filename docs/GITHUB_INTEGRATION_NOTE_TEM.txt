@@ -3,3 +3,14 @@ data/raw/TEM/OneView 200kV 800kX 39972.jpg
 
 Recommended command:
 python scripts/tem/00_tem_patch_ensemble_analysis.py --repo-root . --source-image "data/raw/TEM/OneView 200kV 800kX 39972.jpg" --roi-csv data/raw/TEM/roi_boxes_template.csv
+
+The ROI CSV contains the manuscript ROI boxes mapped onto the raw source image.
+The original interactive selection helper used a texture-guided ROI workflow:
+512 x 512 grayscale working canvas, 32 x 32 candidate windows, local standard
+deviation texture scoring, 40th-percentile candidate filtering, FFT-based
+d-spacing/orientation extraction, lattice-domain grouping, and selection of up
+to five highest-texture representative ROIs across the primary domains.
+The default run uses data/processed/TEM/TEM_descriptors.csv as the manuscript
+reference descriptor table and writes TEM_roi_selection_overlay.png/.pdf for
+visual ROI checking. Use --recompute-descriptors only for exploratory crop
+checks, not for replacing the manuscript descriptor table.

@@ -85,7 +85,7 @@ CSV tables prepared for plotting, fitting summaries, and manuscript-linked inter
 - `EIS/quantum_branches/`: branch parameters, metrics, overlays, and deviations
 - `EIS/qaoa_landscapes/`: surrogate slices and coarse/refined QAOA landscape tables
 - `Raman/`: baseline correction, peak fitting, and local spectral segmentation tables
-- `TEM/`: patch-ensemble descriptor tables for the TEM reproducibility workflow
+- `TEM/`: manuscript reference patch-ensemble descriptor tables for the TEM reproducibility workflow
 - `XPS/`: profile-fit summaries, adopted 13-peak table, and corrected descriptor matrix
 
 ### `scripts/`
@@ -128,7 +128,7 @@ python scripts/eis/04_eis_shared_objective_full_pipeline.py --input data/raw/EIS
 
 The GCD/EIS quantum-circuit schematic notebook can be opened interactively from `scripts/qc_circuit/generate_gcd_eis_qc_circuits.ipynb`.
 
-The committed archive includes the manuscript-facing CSV tables. Generated figures and local rerun outputs are written to ignored output paths where possible, so they can be recreated locally without becoming part of the tracked archive.
+The committed archive includes the manuscript-facing CSV tables. The TEM script uses the committed TEM descriptor table for the manuscript summary panels by default and writes a ROI-selection overlay from `roi_boxes_template.csv` so the selected regions can be checked directly. Generated figures and local rerun outputs are written to ignored output paths where possible, so they can be recreated locally without becoming part of the tracked archive.
 
 ## Manuscript-level analysis map
 

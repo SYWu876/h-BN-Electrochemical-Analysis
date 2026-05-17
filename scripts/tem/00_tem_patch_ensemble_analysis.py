@@ -2,7 +2,7 @@
 """
 Reproducible TEM ROI analysis for the h-BN manuscript.
 
-This script rebuilds the ROI-level descriptor workflow described in Note S1:
+This script documents the ROI-level descriptor workflow described in Note S1:
 - high-pass preprocessing
 - conservative contrast normalization and mild denoising
 - windowed FFT magnitude
@@ -27,24 +27,41 @@ Supported input modes
        roi, x, y, width, height
    where (x, y) is the upper-left corner in pixels.
 
+ROI selection provenance
+------------------------
+The manuscript ROI boxes stored in `data/raw/TEM/roi_boxes_template.csv` come
+from the interactive TEM helper's texture-guided selection workflow: grayscale
+512 x 512 working canvas, 32 x 32 candidate windows, local standard-deviation
+texture scoring, 40th-percentile candidate filtering, FFT-based
+d-spacing/orientation extraction, lattice-domain grouping, and selection of up
+to five representative high-texture ROIs across the primary domains. This script
+uses the stored manuscript ROI coordinates as the reproducible archive input.
+
 Outputs
 -------
 - data/processed/TEM/TEM_descriptors.csv
 - data/processed/TEM/TEM_descriptors_normalized.csv
+- data/processed/TEM/TEM_roi_selection_overlay.png/.pdf
 - data/processed/TEM/TEM_order_disorder_map.png/.pdf
 - data/processed/TEM/TEM_geometric_patch_weights.png/.pdf
 - data/processed/TEM/TEM_descriptor_heatmap.png/.pdf
 - ROI-level PNG exports: processed image, FFT magnitude, lattice map, maxima overlay
 
+By default, the manuscript descriptor table already committed under
+`data/processed/TEM/TEM_descriptors.csv` is used for the Figure 1f-h style
+summary panels. Use `--recompute-descriptors` only for exploratory checks of
+the current ROI crops; those image-processing estimates are not a replacement
+for the manuscript reference descriptor table.
+
 Minimal example
 ---------------
 From the repository root:
-    python scripts/00_tem_patch_ensemble_analysis.py \
+    python scripts/tem/00_tem_patch_ensemble_analysis.py \
         --repo-root . \
         --roi-dir data/raw/TEM/rois
 
 Or with a source image + ROI table:
-python scripts/00_tem_patch_ensemble_analysis.py \
+python scripts/tem/00_tem_patch_ensemble_analysis.py \
     --repo-root . \
     --source-image "data/raw/TEM/OneView 200kV 800kX 39972.jpg" \
     --roi-csv data/raw/TEM/roi_boxes_template.csv
@@ -67,6 +84,7 @@ from scipy import ndimage as ndi
 from scipy.signal import find_peaks, savgol_filter
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
+from matplotlib.patches import Rectangle
 
 
 # ---------------------------
@@ -75,6 +93,25 @@ from matplotlib.colors import Normalize
 
 ROI_NAME_ORDER = ["ROI-1", "ROI-2", "ROI-3", "ROI-4", "ROI-5"]
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp"}
+DESCRIPTOR_COLUMNS = [
+    "ROI",
+    "P_FFT",
+    "A_off",
+    "R_bp",
+    "Delta_q_FFT",
+    "LOI_0_100",
+    "geometric_patch_weight_wi",
+]
+NORMALIZED_DESCRIPTOR_COLUMNS = [
+    "ROI",
+    "P_FFT_norm",
+    "A_off_norm",
+    "R_bp_norm",
+    "Delta_q_FFT_norm_raw",
+    "Delta_q_FFT_ordering_tendency_inverted",
+    "LOI_0_100",
+    "geometric_patch_weight_wi",
+]
 
 
 @dataclass
@@ -100,6 +137,13 @@ class ROIResult:
 
 def ensure_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
+
+
+def copy_file_if_different(source: Path, destination: Path) -> None:
+    if source.resolve() == destination.resolve():
+        return
+    ensure_dir(destination.parent)
+    destination.write_bytes(source.read_bytes())
 
 
 def load_image(path: Path) -> np.ndarray:
@@ -364,8 +408,7 @@ def discover_roi_files(roi_dir: Path) -> Dict[str, Path]:
     return mapping
 
 
-def crop_rois_from_source(source_image: Path, roi_csv: Path) -> Dict[str, np.ndarray]:
-    img = load_image(source_image)
+def read_roi_box_table(roi_csv: Path, image_shape: Tuple[int, int]) -> pd.DataFrame:
     df = pd.read_csv(roi_csv)
     if "roi" not in df.columns and "roi_name" in df.columns:
         df = df.rename(columns={"roi_name": "roi"})
@@ -373,6 +416,48 @@ def crop_rois_from_source(source_image: Path, roi_csv: Path) -> Dict[str, np.nda
     missing = required.difference(df.columns)
     if missing:
         raise ValueError(f"ROI CSV missing required columns: {sorted(missing)}")
+
+    height, width = image_shape
+    rows = []
+    seen_rois = set()
+    seen_boxes = set()
+    for _, row in df.iterrows():
+        roi = str(row["roi"]).strip()
+        if roi not in ROI_NAME_ORDER:
+            raise ValueError(f"Unexpected ROI label in ROI CSV: {roi}")
+        if roi in seen_rois:
+            raise ValueError(f"Duplicate ROI label in ROI CSV: {roi}")
+        seen_rois.add(roi)
+
+        x = int(row["x"])
+        y = int(row["y"])
+        w = int(row["width"])
+        h = int(row["height"])
+        if x < 0 or y < 0 or w <= 0 or h <= 0:
+            raise ValueError(f"Invalid ROI box for {roi}: x={x}, y={y}, width={w}, height={h}")
+        if x + w > width or y + h > height:
+            raise ValueError(
+                f"ROI box for {roi} exceeds source image bounds: "
+                f"x={x}, y={y}, width={w}, height={h}, image={width}x{height}"
+            )
+
+        box = (x, y, w, h)
+        if box in seen_boxes:
+            raise ValueError(f"Duplicate ROI crop box in ROI CSV: {box}")
+        seen_boxes.add(box)
+        rows.append({"roi": roi, "x": x, "y": y, "width": w, "height": h})
+
+    missing_order = [roi for roi in ROI_NAME_ORDER if roi not in seen_rois]
+    if missing_order:
+        raise ValueError(f"ROI CSV did not provide all expected ROIs: {missing_order}")
+
+    ordered = pd.DataFrame(rows).set_index("roi").loc[ROI_NAME_ORDER].reset_index()
+    return ordered
+
+
+def crop_rois_from_source(source_image: Path, roi_csv: Path) -> Dict[str, np.ndarray]:
+    img = load_image(source_image)
+    df = read_roi_box_table(roi_csv, image_shape=img.shape[:2])
 
     rois: Dict[str, np.ndarray] = {}
     for _, row in df.iterrows():
@@ -386,9 +471,6 @@ def crop_rois_from_source(source_image: Path, roi_csv: Path) -> Dict[str, np.nda
             raise ValueError(f"Empty crop for {roi}: x={x}, y={y}, width={w}, height={h}")
         rois[roi] = crop
 
-    missing_order = [roi for roi in ROI_NAME_ORDER if roi not in rois]
-    if missing_order:
-        raise ValueError(f"ROI CSV did not provide all expected ROIs: {missing_order}")
     return rois
 
 
@@ -501,6 +583,72 @@ def results_to_tables(results: Sequence[ROIResult], geometric_eps: float) -> Tup
     return df, df_norm, metadata
 
 
+def reference_descriptors_to_tables(
+    descriptor_csv: Path,
+    geometric_eps: float,
+    normalized_csv: Optional[Path] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    if not np.isfinite(geometric_eps) or geometric_eps <= 0:
+        raise ValueError("geometric_eps must be a finite value greater than 0")
+    if not descriptor_csv.exists():
+        raise FileNotFoundError(f"Reference TEM descriptor table not found: {descriptor_csv}")
+
+    df = pd.read_csv(descriptor_csv)
+    missing = [column for column in DESCRIPTOR_COLUMNS if column not in df.columns]
+    if missing:
+        raise ValueError(f"Reference TEM descriptor table missing columns: {missing}")
+
+    df = df[DESCRIPTOR_COLUMNS].copy()
+    df["ROI"] = df["ROI"].astype(str).str.strip()
+    if set(df["ROI"]) != set(ROI_NAME_ORDER):
+        raise ValueError(f"Reference TEM descriptor table must contain exactly {ROI_NAME_ORDER}")
+    df = df.set_index("ROI").loc[ROI_NAME_ORDER].reset_index()
+
+    wi = df["geometric_patch_weight_wi"].to_numpy(dtype=float)
+    weight_sum = float(np.sum(wi))
+    if not np.isfinite(weight_sum) or weight_sum <= 0:
+        raise ValueError("Reference TEM geometric patch weights must sum to a positive finite value")
+    wi_norm = wi / weight_sum
+
+    if normalized_csv is not None and normalized_csv.exists():
+        df_norm = pd.read_csv(normalized_csv)
+        missing_norm = [column for column in NORMALIZED_DESCRIPTOR_COLUMNS if column not in df_norm.columns]
+        if missing_norm:
+            raise ValueError(f"Reference TEM normalized descriptor table missing columns: {missing_norm}")
+        df_norm = df_norm[NORMALIZED_DESCRIPTOR_COLUMNS].copy()
+        df_norm["ROI"] = df_norm["ROI"].astype(str).str.strip()
+        if set(df_norm["ROI"]) != set(ROI_NAME_ORDER):
+            raise ValueError(f"Reference TEM normalized descriptor table must contain exactly {ROI_NAME_ORDER}")
+        df_norm = df_norm.set_index("ROI").loc[ROI_NAME_ORDER].reset_index()
+    else:
+        Pn = minmax(df["P_FFT"].to_numpy())
+        An = minmax(df["A_off"].to_numpy())
+        Rn = minmax(df["R_bp"].to_numpy())
+        delta_q_norm_raw = minmax(df["Delta_q_FFT"].to_numpy())
+        Cn = 1.0 - delta_q_norm_raw
+        df_norm = pd.DataFrame(
+            {
+                "ROI": df["ROI"],
+                "P_FFT_norm": Pn,
+                "A_off_norm": An,
+                "R_bp_norm": Rn,
+                "Delta_q_FFT_norm_raw": delta_q_norm_raw,
+                "Delta_q_FFT_ordering_tendency_inverted": Cn,
+                "LOI_0_100": df["LOI_0_100"],
+                "geometric_patch_weight_wi": df["geometric_patch_weight_wi"],
+            }
+        )
+
+    metadata = {
+        "geometric_eps": float(geometric_eps),
+        "descriptor_source": str(descriptor_csv),
+        "ensemble_centroid_LOI": float(np.sum(df["LOI_0_100"].to_numpy(dtype=float) * wi_norm)),
+        "ensemble_centroid_Delta_q_FFT": float(np.sum(df["Delta_q_FFT"].to_numpy(dtype=float) * wi_norm)),
+        "ordering_rank": " > ".join(df.sort_values("LOI_0_100", ascending=False)["ROI"].tolist()),
+    }
+    return df, df_norm, metadata
+
+
 # ---------------------------
 # Plotting
 # ---------------------------
@@ -561,6 +709,38 @@ def save_roi_artifacts(result: ROIResult, out_dir: Path) -> None:
     style_axes(ax)
     fig.tight_layout()
     fig.savefig(roi_dir / "radial_fft_profile.png", bbox_inches="tight")
+    plt.close(fig)
+
+
+def save_roi_selection_overlay(source_image: Path, roi_csv: Path, out_dir: Path) -> None:
+    img = load_image(source_image)
+    boxes = read_roi_box_table(roi_csv, image_shape=img.shape[:2])
+
+    set_plot_style(1.0)
+    fig, ax = plt.subplots(figsize=(7.2, 7.2), dpi=300)
+    ax.imshow(img, cmap="gray")
+    for _, row in boxes.iterrows():
+        x = int(row["x"])
+        y = int(row["y"])
+        w = int(row["width"])
+        h = int(row["height"])
+        roi = str(row["roi"])
+        ax.add_patch(Rectangle((x, y), w, h, fill=False, edgecolor="#f2c400", linewidth=2.2))
+        ax.text(
+            x,
+            max(0, y - 24),
+            roi,
+            ha="left",
+            va="bottom",
+            fontsize=9,
+            fontweight="bold",
+            color="black",
+            bbox={"facecolor": "white", "edgecolor": "none", "pad": 1.5},
+        )
+    ax.set_axis_off()
+    fig.tight_layout(pad=0)
+    fig.savefig(out_dir / "TEM_roi_selection_overlay.png", bbox_inches="tight", pad_inches=0)
+    fig.savefig(out_dir / "TEM_roi_selection_overlay.pdf", bbox_inches="tight", pad_inches=0)
     plt.close(fig)
 
 
@@ -664,8 +844,19 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--roi-dir", type=Path, default=None, help="Directory containing cropped ROI images.")
     parser.add_argument("--source-image", type=Path, default=None, help="Path to a single source TEM image.")
     parser.add_argument("--roi-csv", type=Path, default=None, help="CSV containing ROI crop boxes for the source image.")
+    parser.add_argument(
+        "--descriptor-csv",
+        type=Path,
+        default=Path("data/processed/TEM/TEM_descriptors.csv"),
+        help="Manuscript reference descriptor table used for summary panels unless --recompute-descriptors is set.",
+    )
     parser.add_argument("--output-dir", type=Path, default=Path("data/processed/TEM"), help="Output directory relative to repo root.")
     parser.add_argument("--geometric-eps", type=float, default=0.05, help="Regularization floor used in the geometric ensemble score.")
+    parser.add_argument(
+        "--recompute-descriptors",
+        action="store_true",
+        help="Recompute exploratory descriptors from the current ROI crops instead of using the manuscript reference table.",
+    )
     parser.add_argument("--save-json-summary", action="store_true", help="Also save a JSON summary of the centroid and rank order.")
     return parser
 
@@ -681,9 +872,15 @@ def main() -> None:
     repo_root = args.repo_root.resolve()
     out_dir = args.output_dir if args.output_dir.is_absolute() else repo_root / args.output_dir
     ensure_dir(out_dir)
+    descriptor_csv = args.descriptor_csv if args.descriptor_csv.is_absolute() else repo_root / args.descriptor_csv
+    normalized_descriptor_csv = descriptor_csv.with_name("TEM_descriptors_normalized.csv")
 
     rois = load_rois(repo_root=repo_root, roi_dir=args.roi_dir, source_image=args.source_image, roi_csv=args.roi_csv)
     ordered_rois = {roi: rois[roi] for roi in ROI_NAME_ORDER}
+    if args.source_image is not None and args.roi_csv is not None:
+        source_image = repo_root / args.source_image if not args.source_image.is_absolute() else args.source_image
+        roi_csv = repo_root / args.roi_csv if not args.roi_csv.is_absolute() else args.roi_csv
+        save_roi_selection_overlay(source_image, roi_csv, out_dir)
 
     results: List[ROIResult] = []
     for roi_name, img in ordered_rois.items():
@@ -691,10 +888,27 @@ def main() -> None:
         results.append(result)
         save_roi_artifacts(result, out_dir)
 
-    df, df_norm, metadata = results_to_tables(results, geometric_eps=args.geometric_eps)
+    if args.recompute_descriptors:
+        df, df_norm, metadata = results_to_tables(results, geometric_eps=args.geometric_eps)
+        metadata["descriptor_source"] = "recomputed_from_current_roi_crops"
+    else:
+        df, df_norm, metadata = reference_descriptors_to_tables(
+            descriptor_csv,
+            geometric_eps=args.geometric_eps,
+            normalized_csv=normalized_descriptor_csv,
+        )
 
-    df.to_csv(out_dir / "TEM_descriptors.csv", index=False)
-    df_norm.to_csv(out_dir / "TEM_descriptors_normalized.csv", index=False)
+    descriptor_out = out_dir / "TEM_descriptors.csv"
+    normalized_descriptor_out = out_dir / "TEM_descriptors_normalized.csv"
+    if args.recompute_descriptors:
+        df.to_csv(descriptor_out, index=False)
+        df_norm.to_csv(normalized_descriptor_out, index=False)
+    else:
+        copy_file_if_different(descriptor_csv, descriptor_out)
+        if normalized_descriptor_csv.exists():
+            copy_file_if_different(normalized_descriptor_csv, normalized_descriptor_out)
+        else:
+            df_norm.to_csv(normalized_descriptor_out, index=False)
 
     if args.save_json_summary:
         with open(out_dir / "TEM_ensemble_summary.json", "w", encoding="utf-8") as f:
@@ -710,11 +924,13 @@ def main() -> None:
     for name in [
         "TEM_descriptors.csv",
         "TEM_descriptors_normalized.csv",
+        "TEM_roi_selection_overlay.png",
         "TEM_order_disorder_map.png",
         "TEM_geometric_patch_weights.png",
         "TEM_descriptor_heatmap.png",
     ]:
         print(f"  - {out_dir / name}")
+    print(f"Descriptor source: {metadata.get('descriptor_source', 'recomputed_from_current_roi_crops')}")
     print(f"Ensemble centroid: LOI = {metadata['ensemble_centroid_LOI']:.3f}, Delta_q_FFT = {metadata['ensemble_centroid_Delta_q_FFT']:.3f}")
     print(f"Ordering rank: {metadata['ordering_rank']}")
 
