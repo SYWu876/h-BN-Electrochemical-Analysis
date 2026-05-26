@@ -130,6 +130,15 @@ def main():
             "slope_R2": slope_metrics["r_squared"],
             "slope_window_upper_V": slope_metrics["window_upper_V"],
             "slope_window_lower_V": slope_metrics["window_lower_V"],
+            "window_selection_method": slope_metrics["selection_method"],
+            "flatness_score": slope_metrics["flatness_score"],
+            "mean_stability_cost": slope_metrics["mean_stability_cost"],
+            "slope_cv": slope_metrics["slope_cv"],
+            "slope_magnitude_fraction": slope_metrics["slope_magnitude_fraction"],
+            "linearity_rmse_fraction": slope_metrics["linearity_rmse_fraction"],
+            "smoothed_R2": slope_metrics["smoothed_R2"],
+            "window_voltage_span_fraction": slope_metrics["window_voltage_span_fraction"],
+            "window_point_fraction": slope_metrics["window_point_fraction"],
             "selected_t_start_s": slope_metrics["window_start_s"],
             "selected_t_end_s": slope_metrics["window_end_s"],
             "selected_duration_s": slope_metrics["window_duration_s"],
@@ -142,6 +151,8 @@ def main():
             "window_end_s": slope_metrics["window_end_s"],
             "retained_window_length_s": slope_metrics["window_duration_s"],
             "mask_points": slope_metrics["N_slope_points"],
+            "window_selection_method": slope_metrics["selection_method"],
+            "flatness_score": slope_metrics["flatness_score"],
             "V0_base_V": V0,
             "Rs_base_ohm": Rs,
             "effective_IR_drop_base_mV": j * Rs * 1000.0,
@@ -172,6 +183,8 @@ def main():
             "mask_points": slope_metrics["N_slope_points"],
             "window_start_s": slope_metrics["window_start_s"],
             "window_end_s": slope_metrics["window_end_s"],
+            "window_selection_method": slope_metrics["selection_method"],
+            "flatness_score": slope_metrics["flatness_score"],
         })
 
         plot_fit_panel(diag, j, p_best, FIG_DIR, slope_mask=slope_mask)

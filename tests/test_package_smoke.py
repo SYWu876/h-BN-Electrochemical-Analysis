@@ -191,14 +191,16 @@ def test_gcd_outputs_use_unified_bounded_fit_contract() -> None:
     pd.testing.assert_frame_equal(final_summary, public_summary)
 
     expected_csp = [
-        82.08268396494205,
-        80.75702396739435,
-        76.64258069852718,
-        71.85815871393504,
-        66.63859685454332,
+        99.0876457235766,
+        90.02908328210498,
+        82.62651540927513,
+        70.89006794626557,
+        61.27702420765139,
     ]
     assert final_summary["Csp_base_F_g^-1"].to_list() == pytest.approx(expected_csp, rel=1e-8)
     assert final_summary["Csp_base_F_g^-1"].is_monotonic_decreasing
+    assert set(final_summary["window_selection_method"]) == {"flattest_linear_post_ir_window"}
+    assert (final_summary["flatness_score"] > 0).all()
     assert final_summary["tau_base_s"].to_list() == pytest.approx([9.0] * 5)
     assert final_summary["A_base"].to_list() == pytest.approx([0.0] * 5)
     assert final_summary["Rs_base_ohm"].to_list() == pytest.approx(
@@ -229,15 +231,15 @@ def test_gcd_outputs_use_unified_bounded_fit_contract() -> None:
     assert "--use-reference-final-table" not in gcd_text
     assert "table_s3_path" not in gcd_text
     assert "slope_only_parameters_from_window" in gcd_text
-    assert "SLOPE_WINDOW_HIGH_FRACTION = 0.75" in gcd_text
-    assert "SLOPE_WINDOW_LOW_FRACTION = 0.35" in gcd_text
+    assert "flattest_linear_post_ir_window" in gcd_text
+    assert "SLOPE_MIN_VOLTAGE_SPAN_FRACTION" in gcd_text
     assert "\"raw_V\"" in gcd_text
     assert "masked_domain_reporting_resistance" in gcd_text
 
     readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
     note_s9_text = (ROOT / "docs" / "Note_S9_GitHub_v4.md").read_text(encoding="utf-8")
     assert "--use-reference-final-table" not in readme_text + note_s9_text
-    assert "same unified GCD preprocessing" in readme_text
+    assert "flattest quasi-linear segment" in readme_text
     assert "one shared algorithm" in note_s9_text
 
 

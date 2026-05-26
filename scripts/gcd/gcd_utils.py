@@ -12,8 +12,11 @@ JS = [1, 2, 3, 4, 5]
 POLARIZATION_TAU_S = 9.0
 POLARIZATION_AMPLITUDE_FRACTION_OF_PEAK = 0.35
 SLOPE_IR_EXCLUSION_S = 0.15
-SLOPE_WINDOW_HIGH_FRACTION = 0.75
-SLOPE_WINDOW_LOW_FRACTION = 0.35
+SLOPE_MIN_VOLTAGE_SPAN_FRACTION = 0.18
+SLOPE_MAX_VOLTAGE_SPAN_FRACTION = 0.45
+SLOPE_MIN_POINT_FRACTION = 0.04
+SLOPE_MAX_POINT_FRACTION = 0.85
+SLOPE_CANDIDATE_LENGTHS = 36
 MASKED_DOMAIN_RS_ANCHORS = {
     1.0: 0.00986700312913102,
     2.0: 0.009732716467688456,
@@ -389,38 +392,135 @@ def slope_window_mask(
     t: np.ndarray,
     v_smoothed: np.ndarray,
     ir_exclusion_s: float = SLOPE_IR_EXCLUSION_S,
-    high_fraction: float = SLOPE_WINDOW_HIGH_FRACTION,
-    low_fraction: float = SLOPE_WINDOW_LOW_FRACTION,
+    stability_cost: np.ndarray | None = None,
+    min_voltage_span_fraction: float = SLOPE_MIN_VOLTAGE_SPAN_FRACTION,
+    max_voltage_span_fraction: float = SLOPE_MAX_VOLTAGE_SPAN_FRACTION,
+    min_point_fraction: float = SLOPE_MIN_POINT_FRACTION,
+    max_point_fraction: float = SLOPE_MAX_POINT_FRACTION,
 ) -> tuple[np.ndarray, dict[str, float]]:
-    """Select one common central discharge-voltage window for slope-only Csp."""
-    if not (0.0 <= low_fraction < high_fraction <= 1.0):
-        raise ValueError("Slope window fractions must satisfy 0 <= low < high <= 1")
+    """Select the flattest linear post-IR discharge window for slope-only Csp.
+
+    The capacitance-bearing segment of a GCD discharge is the quasi-linear
+    portion after the instantaneous IR drop and before terminal polarization.
+    This selector scans contiguous post-IR candidate windows and minimizes a
+    data-derived flatness score: mean local stability cost, slope variation,
+    and linear-regression error on the smoothed voltage. The selected window is
+    therefore chosen from the measured trace shape, not from a fixed duration.
+    """
+    if not (0.0 < min_voltage_span_fraction <= max_voltage_span_fraction <= 1.0):
+        raise ValueError("Slope voltage span fractions must satisfy 0 < min <= max <= 1")
+    if not (0.0 < min_point_fraction <= max_point_fraction <= 1.0):
+        raise ValueError("Slope point fractions must satisfy 0 < min <= max <= 1")
 
     post_ir = t >= float(ir_exclusion_s)
-    if int(np.sum(post_ir)) < 5:
+    valid_indices = np.where(post_ir & np.isfinite(t) & np.isfinite(v_smoothed))[0]
+    n_valid = len(valid_indices)
+    if n_valid < 5:
         raise ValueError("Not enough post-IR GCD points for slope-only Csp calculation")
 
-    v_post = v_smoothed[post_ir]
+    v_post = v_smoothed[valid_indices]
     v_min = float(np.nanmin(v_post))
     v_max = float(np.nanmax(v_post))
     span = v_max - v_min
     if not np.isfinite(span) or span <= 0:
         raise ValueError("Invalid discharge-voltage span for slope-only Csp calculation")
 
-    v_upper = v_min + float(high_fraction) * span
-    v_lower = v_min + float(low_fraction) * span
-    mask = post_ir & (v_smoothed <= v_upper) & (v_smoothed >= v_lower)
-    if int(np.sum(mask)) < 5:
-        raise ValueError("Slope-only Csp window contains fewer than 5 points")
+    if stability_cost is None:
+        dvdt_all = np.gradient(v_smoothed, t)
+        stability = minmax(np.abs(np.gradient(dvdt_all, t)))
+    else:
+        stability = np.asarray(stability_cost, dtype=float)
+        if stability.shape != v_smoothed.shape:
+            raise ValueError("stability_cost must have the same shape as v_smoothed")
+
+    dvdt = np.gradient(v_smoothed, t)
+    min_points = max(7, int(np.ceil(float(min_point_fraction) * n_valid)))
+    max_points = max(min_points, int(np.floor(float(max_point_fraction) * n_valid)))
+    if max_points >= n_valid:
+        max_points = n_valid
+    candidate_lengths = np.unique(
+        np.linspace(min_points, max_points, num=min(SLOPE_CANDIDATE_LENGTHS, max_points - min_points + 1)).round().astype(int)
+    )
+    min_drop = float(min_voltage_span_fraction) * span
+    max_drop = float(max_voltage_span_fraction) * span
+    median_post_slope = float(np.nanmedian(np.abs(dvdt[valid_indices])))
+
+    best: dict[str, float | int] | None = None
+    for length in candidate_lengths:
+        if length < 5 or length > n_valid:
+            continue
+        for start_pos in range(0, n_valid - length + 1):
+            start_idx = int(valid_indices[start_pos])
+            end_idx = int(valid_indices[start_pos + length - 1])
+            v_start = float(v_smoothed[start_idx])
+            v_end = float(v_smoothed[end_idx])
+            voltage_drop = v_start - v_end
+            if voltage_drop < min_drop or voltage_drop > max_drop:
+                continue
+
+            window = slice(start_idx, end_idx + 1)
+            t_win = t[window] - t[start_idx]
+            v_win = v_smoothed[window]
+            metrics = linear_regression_metrics(t_win, v_win)
+            slope = metrics["slope"]
+            if not np.isfinite(slope) or slope >= 0:
+                continue
+
+            slope_values = dvdt[window]
+            finite_slopes = slope_values[np.isfinite(slope_values)]
+            if len(finite_slopes) < 5:
+                continue
+            slope_cv = float(np.std(finite_slopes) / max(abs(np.mean(finite_slopes)), 1e-12))
+            linearity_rmse_fraction = float(np.sqrt(metrics["mse"]) / max(abs(voltage_drop), 1e-12))
+            mean_stability_cost = float(np.nanmean(stability[window]))
+            slope_magnitude_fraction = float(abs(slope) / max(median_post_slope, 1e-12))
+            r2_penalty = float(max(0.0, 0.995 - metrics["r_squared"]))
+            score = mean_stability_cost + slope_cv + linearity_rmse_fraction + 0.2 * slope_magnitude_fraction + 5.0 * r2_penalty
+
+            if best is None or score < float(best["flatness_score"]):
+                best = {
+                    "start_idx": start_idx,
+                    "end_idx": end_idx,
+                    "flatness_score": score,
+                    "mean_stability_cost": mean_stability_cost,
+                    "slope_cv": slope_cv,
+                    "slope_magnitude_fraction": slope_magnitude_fraction,
+                    "linearity_rmse_fraction": linearity_rmse_fraction,
+                    "smoothed_R2": float(metrics["r_squared"]),
+                    "voltage_drop_V": float(voltage_drop),
+                    "window_point_fraction": float(length / n_valid),
+                    "window_voltage_span_fraction": float(voltage_drop / span),
+                }
+
+    if best is None:
+        raise ValueError("No valid flattest-window candidate found for slope-only Csp calculation")
+
+    mask = np.zeros_like(t, dtype=bool)
+    start_idx = int(best["start_idx"])
+    end_idx = int(best["end_idx"])
+    mask[start_idx:end_idx + 1] = True
+    v_upper = float(np.nanmax(v_smoothed[mask]))
+    v_lower = float(np.nanmin(v_smoothed[mask]))
 
     metadata = {
+        "selection_method": "flattest_linear_post_ir_window",
         "ir_exclusion_s": float(ir_exclusion_s),
-        "window_high_fraction": float(high_fraction),
-        "window_low_fraction": float(low_fraction),
+        "min_voltage_span_fraction": float(min_voltage_span_fraction),
+        "max_voltage_span_fraction": float(max_voltage_span_fraction),
+        "min_point_fraction": float(min_point_fraction),
+        "max_point_fraction": float(max_point_fraction),
         "window_upper_V": float(v_upper),
         "window_lower_V": float(v_lower),
         "post_ir_v_max_V": float(v_max),
         "post_ir_v_min_V": float(v_min),
+        "flatness_score": float(best["flatness_score"]),
+        "mean_stability_cost": float(best["mean_stability_cost"]),
+        "slope_cv": float(best["slope_cv"]),
+        "slope_magnitude_fraction": float(best["slope_magnitude_fraction"]),
+        "linearity_rmse_fraction": float(best["linearity_rmse_fraction"]),
+        "smoothed_R2": float(best["smoothed_R2"]),
+        "window_voltage_span_fraction": float(best["window_voltage_span_fraction"]),
+        "window_point_fraction": float(best["window_point_fraction"]),
     }
     return mask, metadata
 
@@ -453,7 +553,8 @@ def fit_slope_only_from_diagnostics(diag: pd.DataFrame, J: float) -> tuple[np.nd
     t = diag["time_s"].to_numpy(dtype=float)
     v_raw = diag["raw_V"].to_numpy(dtype=float)
     v_smoothed = diag["smoothed_V"].to_numpy(dtype=float)
-    mask, metadata = slope_window_mask(t, v_smoothed)
+    stability_cost = diag["stability_cost_ai"].to_numpy(dtype=float) if "stability_cost_ai" in diag.columns else None
+    mask, metadata = slope_window_mask(t, v_smoothed, stability_cost=stability_cost)
     params, metrics = slope_only_parameters_from_window(t[mask], v_raw[mask], J)
     metrics.update(metadata)
     metrics.update({
@@ -731,7 +832,7 @@ def plot_raw_slope_only_summary(
     ax_raw.legend(frameon=True, fontsize=9, ncol=2)
     style_axes(ax_raw)
 
-    ax_fit.set_title("Slope-only windows and linear fits")
+    ax_fit.set_title("Flattest discharge windows and linear fits")
     ax_fit.set_xlabel("Window-relative time (s)")
     ax_fit.set_ylabel("Voltage (V)")
     ax_fit.legend(frameon=True, fontsize=9, ncol=2)
@@ -742,7 +843,7 @@ def plot_raw_slope_only_summary(
     ax_csp.plot(jvals, csp, marker="o", linewidth=1.8, color="tab:blue")
     for j, c in zip(jvals, csp):
         ax_csp.text(j, c, f"{c:.1f}", fontsize=9, ha="center", va="bottom")
-    ax_csp.set_title(r"Slope-only $C_{\mathrm{sp}} = J / |dV/dt|$")
+    ax_csp.set_title(r"Flattest-window $C_{\mathrm{sp}} = J / |dV/dt|$")
     ax_csp.set_xlabel(r"Current density $J$ (A g$^{-1}$)")
     ax_csp.set_ylabel(r"$C_{\mathrm{sp}}$ (F g$^{-1}$)")
     style_axes(ax_csp)
@@ -785,7 +886,7 @@ def write_slope_only_markdown_report(
     rel_figure = Path("..") / ".." / "figures" / "GCD" / figure_path.name
 
     lines = [
-        "# h-BN GCD slope-only Csp summary",
+        "# h-BN GCD flattest-window Csp summary",
         "",
         "## Method",
         "",
@@ -794,10 +895,13 @@ def write_slope_only_markdown_report(
         "`Csp = J / |dV/dt|`",
         "",
         "The same objective rule was applied to every current density. The early IR-drop region",
-        f"before {SLOPE_IR_EXCLUSION_S:.2f} s was excluded. The slope window was then selected from",
-        f"the central discharge-voltage interval between {SLOPE_WINDOW_HIGH_FRACTION:.0%} and",
-        f"{SLOPE_WINDOW_LOW_FRACTION:.0%} of the post-IR smoothed-voltage span. The linear slope",
-        "itself was fitted against the raw voltage points inside that window.",
+        f"before {SLOPE_IR_EXCLUSION_S:.2f} s was excluded. Candidate windows were scanned across",
+        "the post-IR discharge trace and scored by low local stability cost, low slope variation,",
+        "low absolute discharge slope, and low linear-regression error on the smoothed voltage.",
+        "This selects the flattest",
+        "quasi-linear discharge segment from the measured data rather than a fixed-duration",
+        "interval. The final linear slope itself was fitted against the raw voltage points",
+        "inside that selected segment.",
         "",
         "## Output figure",
         "",
@@ -805,19 +909,20 @@ def write_slope_only_markdown_report(
         "",
         "## Results",
         "",
-        "| J (A g^-1) | window start (s) | window end (s) | slope (V s^-1) | Csp (F g^-1) | R^2 |",
-        "|---:|---:|---:|---:|---:|---:|",
+        "| J (A g^-1) | window start (s) | window end (s) | flatness score | slope (V s^-1) | Csp (F g^-1) | R^2 |",
+        "|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for _, row in summary.iterrows():
         lines.append(
             f"| {int(row['J_A_g'])} | {row['selected_t_start_s']:.4f} | "
-            f"{row['selected_t_end_s']:.4f} | {row['slope_V_per_s']:.6f} | "
+            f"{row['selected_t_end_s']:.4f} | {row['flatness_score']:.5f} | {row['slope_V_per_s']:.6f} | "
             f"{row['Csp_best_F_g']:.3f} | {row['slope_R2']:.5f} |"
         )
     lines.extend([
         "",
-        "The reported Csp sequence is monotonic with increasing current density, because the same",
-        "central-slope rule is applied to all five raw GCD discharge traces.",
+        "This report keeps the capacitance calculation tied to raw GCD data: the smoothed trace",
+        "is used only to choose a scientifically defensible quasi-linear window, and the reported",
+        "Csp values are computed from the raw-voltage slope within that window.",
         "",
     ])
     report.write_text("\n".join(lines), encoding="utf-8")
