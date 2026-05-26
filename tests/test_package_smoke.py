@@ -138,7 +138,7 @@ def test_integrated_domain_archive_files_are_present() -> None:
     assert len(set(roi_boxes)) == 5
     assert all(x > 0 and y > 0 and width > 0 and height > 0 for x, y, width, height in roi_boxes)
 
-    tem_summary = json.loads((ROOT / "data" / "processed" / "TEM" / "TEM_ensemble_summary.json").read_text())
+    tem_summary = json.loads((ROOT / "data" / "processed" / "TEM" / "TEM_ensemble_summary.json").read_text(encoding="utf-8"))
     descriptor_source = tem_summary["descriptor_source"]
     assert descriptor_source == "data/processed/TEM/TEM_descriptors.csv"
     assert not re.match(r"^[A-Za-z]:", descriptor_source)
