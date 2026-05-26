@@ -85,7 +85,7 @@ CSV tables prepared for plotting, fitting summaries, and manuscript-linked inter
 - `EIS/quantum_branches/`: branch parameters, metrics, overlays, and deviations
 - `EIS/qaoa_landscapes/`: surrogate slices and coarse/refined QAOA landscape tables
 - `Raman/`: baseline correction, peak fitting, and local spectral segmentation tables
-- `TEM/`: patch-ensemble descriptor tables for the TEM reproducibility workflow
+- `TEM/`: manuscript reference patch-ensemble descriptor tables for the TEM reproducibility workflow
 - `XPS/`: profile-fit summaries, adopted 13-peak table, and corrected descriptor matrix
 
 ### `scripts/`
@@ -94,7 +94,7 @@ Python scripts and notebooks included for rebuilding selected analysis products.
 
 The first three EIS scripts in `scripts/eis/` are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `scripts/eis/02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `scripts/eis/03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
 
-For the full EIS shared-objective workflow, use `scripts/eis/04_eis_shared_objective_full_pipeline.py`. It starts from the raw EIS spectrum, performs the classical anchor fit, builds the local surrogate, evaluates the QAOA-compatible landscape, decodes the discrete branch, and writes the manuscript EIS surrogate slices, including `R1_Q1_slice.csv` and `Rs_alpha1_slice.csv`, to the selected output directory.
+For the full EIS shared-objective workflow, use `scripts/eis/04_eis_shared_objective_full_pipeline.py`. It starts from the raw EIS spectrum, performs the unweighted complex least-squares classical anchor fit used for the Nyquist overlay, builds the local surrogate, evaluates an exact p=1 statevector QAOA landscape over the discretized trust-region lattice, decodes the discrete branch, and writes the manuscript EIS surrogate slices, including `R1_Q1_slice.csv` and `Rs_alpha1_slice.csv`, to the selected output directory.
 
 All EIS surrogate slices used in the manuscript can be regenerated from the full shared-objective pipeline.
 
@@ -128,7 +128,7 @@ python scripts/eis/04_eis_shared_objective_full_pipeline.py --input data/raw/EIS
 
 The GCD/EIS quantum-circuit schematic notebook can be opened interactively from `scripts/qc_circuit/generate_gcd_eis_qc_circuits.ipynb`.
 
-The committed archive includes the manuscript-facing CSV tables. Generated figures and local rerun outputs are written to ignored output paths where possible, so they can be recreated locally without becoming part of the tracked archive.
+The committed archive includes the manuscript-facing CSV tables. The TEM script uses the committed TEM descriptor table for the manuscript summary panels by default and writes a ROI-selection overlay from `roi_boxes_template.csv` so the selected regions can be checked directly. Generated figures and local rerun outputs are written to ignored output paths where possible, so they can be recreated locally without becoming part of the tracked archive.
 
 ## Manuscript-level analysis map
 

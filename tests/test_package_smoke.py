@@ -11,6 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 
@@ -26,6 +27,20 @@ def load_integrated_module():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def load_cv_current_heatmap_module():
+    script_dir = ROOT / "scripts" / "cv"
+    script = script_dir / "02_current_heatmap.py"
+    sys.path.insert(0, str(script_dir))
+    try:
+        spec = importlib.util.spec_from_file_location("cv_current_heatmap", script)
+        assert spec is not None and spec.loader is not None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    finally:
+        sys.path.pop(0)
 
 
 def test_readme_and_citation_contact_email_match() -> None:
@@ -105,7 +120,13 @@ def test_integrated_domain_archive_files_are_present() -> None:
         assert artifact.stat().st_size > 0, path
 
     with (ROOT / "data" / "raw" / "TEM" / "roi_boxes_template.csv").open(newline="", encoding="utf-8") as f:
-        assert next(csv.reader(f)) == ["roi", "x", "y", "width", "height"]
+        reader = csv.DictReader(f)
+        assert reader.fieldnames == ["roi", "x", "y", "width", "height"]
+        roi_rows = list(reader)
+    assert [row["roi"] for row in roi_rows] == ["ROI-1", "ROI-2", "ROI-3", "ROI-4", "ROI-5"]
+    roi_boxes = [(int(row["x"]), int(row["y"]), int(row["width"]), int(row["height"])) for row in roi_rows]
+    assert len(set(roi_boxes)) == 5
+    assert all(x > 0 and y > 0 and width > 0 and height > 0 for x, y, width, height in roi_boxes)
 
     with (ROOT / "data" / "processed" / "TEM" / "TEM_descriptors.csv").open(newline="", encoding="utf-8") as f:
         assert next(csv.reader(f)) == [
@@ -226,6 +247,29 @@ def test_integrated_heatmap_validation_errors_are_clear(tmp_path: Path) -> None:
     assert (tmp_path / "hBN_cross_domain_pca.png").exists()
 
 
+def test_cv_current_heatmap_uses_split_cv_branches() -> None:
+    module = load_cv_current_heatmap_module()
+    curves = module.extract_all_curves(module.load_cv_dataframe())
+    E_grid = module.common_potential_grid(curves, "anodic")
+    cathodic_matrix = module.interpolate_branch_matrix(curves, "cathodic", E_grid)
+    anodic_matrix = module.interpolate_branch_matrix(curves, "anodic", E_grid)
+    intensity_matrix = module.branch_rms_intensity_matrix(cathodic_matrix, anodic_matrix)
+
+    assert cathodic_matrix.shape == anodic_matrix.shape == (len(module.SCAN_RATES), E_grid.size)
+    assert intensity_matrix.shape == cathodic_matrix.shape
+    assert module.np.all(module.np.diff(E_grid) > 0)
+
+    # The raw CV loops contain a large negative cathodic feature and a large positive
+    # anodic feature. A collapsed full-loop interpolation produces only a smooth
+    # scan-rate gradient and fails these range checks.
+    assert cathodic_matrix.min() < -4.5
+    assert anodic_matrix.max() > 8.5
+    assert cathodic_matrix.std(axis=1).max() > 1.0
+    assert anodic_matrix.std(axis=1).max() > 1.5
+    assert 5.5 < intensity_matrix.max() < 6.8
+    assert intensity_matrix[:, (0.28 < E_grid) & (E_grid < 0.31)].mean() > 2.0
+
+
 def test_package_excludes_cache_and_os_metadata() -> None:
     result = subprocess.run(
         ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
@@ -267,6 +311,35 @@ def test_tem_pipeline_rejects_invalid_geometric_eps(tmp_path: Path) -> None:
         assert result.returncode != 0
         assert "--geometric-eps" in result.stderr
         assert "must be a positive finite float" in result.stderr
+
+
+def test_tem_pipeline_uses_reference_descriptors_and_real_roi_boxes(tmp_path: Path) -> None:
+    output_dir = tmp_path / "tem"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "tem" / "00_tem_patch_ensemble_analysis.py"),
+            "--repo-root",
+            str(ROOT),
+            "--source-image",
+            "data/raw/TEM/OneView 200kV 800kX 39972.jpg",
+            "--roi-csv",
+            "data/raw/TEM/roi_boxes_template.csv",
+            "--output-dir",
+            str(output_dir),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=SCRIPT_TIMEOUT_SECONDS,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "Descriptor source:" in result.stdout
+    assert "data\\processed\\TEM\\TEM_descriptors.csv" in result.stdout or "data/processed/TEM/TEM_descriptors.csv" in result.stdout
+    assert (output_dir / "TEM_roi_selection_overlay.png").exists()
+    assert (output_dir / "TEM_descriptors.csv").read_text(encoding="utf-8").strip() == (
+        ROOT / "data" / "processed" / "TEM" / "TEM_descriptors.csv"
+    ).read_text(encoding="utf-8").strip()
 
 
 def test_eis_scripts_write_outputs_in_temporary_project(tmp_path: Path) -> None:
@@ -395,6 +468,18 @@ def test_full_shared_objective_pipeline_writes_manuscript_slices(tmp_path: Path)
         output = output_dir / output_name
         assert output.exists(), output_name
         assert output.stat().st_size > 0, output_name
+
+    qaoa_landscape = pd.read_csv(output_dir / "qaoa_p1_landscape.csv")
+    assert set(qaoa_landscape["mode"]) == {"exact_statevector_p1"}
+    anchor_parameters = pd.read_csv(output_dir / "classical_anchor_parameters.csv")
+    rct = float(anchor_parameters.loc[anchor_parameters["parameter"] == "Rct", "classical_anchor_value"].iloc[0])
+    assert 20.0 < rct < 50.0
+    branch_loss = pd.read_csv(output_dir / "branch_loss_comparison.csv")
+    assert {"unweighted_true_SSE", "relative_weighted_SSE", "surrogate_energy"}.issubset(branch_loss.columns)
+    with (output_dir / "decoded_bitstring_summary.json").open(encoding="utf-8") as f:
+        decoded_summary = json.load(f)
+    assert decoded_summary["qaoa_summary"]["qaoa_landscape_mode"] == "exact_statevector_p1"
+    assert decoded_summary["loss_definition"] == "unweighted complex SSE over real and imaginary residuals"
 
     with (output_dir / "R1_Q1_slice.csv").open(newline="", encoding="utf-8") as f:
         assert next(csv.reader(f)) == [

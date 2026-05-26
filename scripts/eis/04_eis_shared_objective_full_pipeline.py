@@ -12,14 +12,14 @@ least-squares fit of the compact non-ideal circuit,
 builds a local quadratic surrogate around the classical anchor in latent
 parameter space (log coordinates for positive parameters and logit coordinates
 for alpha values), discretizes that local trust region using 3 bits per
-parameter, maps the surrogate to a QUBO/Ising-style binary objective, exports a
-QAOA-compatible angle landscape, decodes the best bitstring, and exports
-spectra, tables, surrogate slices, landscape tables, and decoded results. The
-exported slice columns named normalized_x/y are local latent displacements kept
-for compatibility with the release package. By default, the landscape uses a
-fast lightweight proxy distribution suitable for repository reproducibility; an
-exact but slower statevector p=1 option is available with
---exact-statevector-qaoa.
+parameter, maps the surrogate to a QUBO/Ising-style binary objective, evaluates
+an exact p=1 statevector QAOA angle landscape over the discretized trust-region
+lattice, decodes the best sampled bitstring, and exports spectra, tables,
+surrogate slices, landscape tables, and decoded results. The exported slice
+columns named normalized_x/y are local latent displacements kept for
+compatibility with the release package. A fast diagnostic proxy is available
+through --fast-proxy-qaoa, but the default qaoa_p1_landscape.csv/png outputs are
+exact p=1 statevector calculations.
 
 The script is intentionally self-contained and transparent. It is intended for
 reproducibility and review, not for claiming quantum advantage.
@@ -151,9 +151,14 @@ def latent_to_physical(x: Sequence[float]) -> np.ndarray:
 
 
 def complex_residual(
-    x: Sequence[float], freq_hz: np.ndarray, z_exp: np.ndarray, weighted: bool = True
+    x: Sequence[float], freq_hz: np.ndarray, z_exp: np.ndarray, weighted: bool = False
 ) -> np.ndarray:
-    """Stacked real/imaginary residuals for least-squares fitting."""
+    """Stacked real/imaginary residuals for least-squares fitting.
+
+    The default unweighted residual matches the classical anchor script and
+    gives the Nyquist overlay used for visual fit assessment.  The weighted
+    form is retained only as a relative-error diagnostic.
+    """
     params = latent_to_physical(x)
     z_model = circuit_impedance(params, freq_hz)
     if weighted:
@@ -163,8 +168,10 @@ def complex_residual(
     return np.r_[(z_model.real - z_exp.real) / scale, (z_model.imag - z_exp.imag) / scale]
 
 
-def loss_from_latent(x: Sequence[float], freq_hz: np.ndarray, z_exp: np.ndarray) -> float:
-    r = complex_residual(x, freq_hz, z_exp, weighted=True)
+def loss_from_latent(
+    x: Sequence[float], freq_hz: np.ndarray, z_exp: np.ndarray, weighted: bool = False
+) -> float:
+    r = complex_residual(x, freq_hz, z_exp, weighted=weighted)
     return float(np.sum(r * r))
 
 
@@ -172,6 +179,7 @@ def fit_classical_anchor(freq_hz: np.ndarray, z_exp: np.ndarray) -> Tuple[np.nda
     """Fit the compact EIS model from several physically plausible starts."""
     initial_guesses = [
         [1.3, 1e-7, 34.0, 0.05, 0.87, 0.04, 0.91],
+        [1.33, 1.83e-7, 34.0, 0.00331, 0.874, 0.00231, 0.915],
         [1.0, 1e-7, 100.0, 0.005, 0.75, 0.003, 0.95],
         [1.0, 1e-6, 40.0, 0.02, 0.80, 0.02, 0.90],
         [2.0, 1e-7, 80.0, 0.01, 0.80, 0.005, 0.90],
@@ -183,7 +191,7 @@ def fit_classical_anchor(freq_hz: np.ndarray, z_exp: np.ndarray) -> Tuple[np.nda
         result = least_squares(
             complex_residual,
             x0,
-            args=(freq_hz, z_exp, True),
+            args=(freq_hz, z_exp, False),
             method="trf",
             max_nfev=30000,
             xtol=1e-11,
@@ -200,7 +208,8 @@ def fit_classical_anchor(freq_hz: np.ndarray, z_exp: np.ndarray) -> Tuple[np.nda
     params = latent_to_physical(x_anchor)
     stats = {
         "least_squares_cost": float(best.cost),
-        "weighted_SSE": loss_from_latent(x_anchor, freq_hz, z_exp),
+        "unweighted_SSE": loss_from_latent(x_anchor, freq_hz, z_exp, weighted=False),
+        "relative_weighted_SSE": loss_from_latent(x_anchor, freq_hz, z_exp, weighted=True),
         "nfev": int(best.nfev),
         "optimality": float(best.optimality),
         "success": bool(best.success),
@@ -350,23 +359,22 @@ def diagonal_surrogate_energies(
 
 
 def apply_rx_all_qubits(state: np.ndarray, beta: float, nbits: int) -> np.ndarray:
-    """Apply product exp(-i beta X) to every qubit in-place style."""
+    """Apply product exp(-i beta X) to every qubit using vectorized blocks."""
     c = math.cos(beta)
     s = -1j * math.sin(beta)
     psi = state.copy()
     for q in range(nbits):
         step = 1 << q
-        period = step << 1
-        for start in range(0, psi.size, period):
-            a = psi[start : start + step].copy()
-            b = psi[start + step : start + period].copy()
-            psi[start : start + step] = c * a + s * b
-            psi[start + step : start + period] = s * a + c * b
+        paired = psi.reshape(-1, 2, step)
+        a = paired[:, 0, :].copy()
+        b = paired[:, 1, :].copy()
+        paired[:, 0, :] = c * a + s * b
+        paired[:, 1, :] = s * a + c * b
     return psi
 
 
-def qaoa_p1_expectation(diag_E: np.ndarray, gamma: float, beta: float) -> float:
-    """Exact statevector expectation for p=1 QAOA on diagonal cost Hamiltonian."""
+def qaoa_p1_probabilities(diag_E: np.ndarray, gamma: float, beta: float) -> np.ndarray:
+    """Exact statevector probabilities for p=1 QAOA on a diagonal cost Hamiltonian."""
     nstates = diag_E.size
     nbits = int(round(math.log2(nstates)))
     E_centered = diag_E - np.mean(diag_E)
@@ -378,6 +386,12 @@ def qaoa_p1_expectation(diag_E: np.ndarray, gamma: float, beta: float) -> float:
     psi = np.exp(-1j * gamma * E_phase).astype(np.complex128) / math.sqrt(nstates)
     psi = apply_rx_all_qubits(psi, beta, nbits)
     prob = np.abs(psi) ** 2
+    return prob / prob.sum()
+
+
+def qaoa_p1_expectation(diag_E: np.ndarray, gamma: float, beta: float) -> float:
+    """Exact statevector expectation for p=1 QAOA on a diagonal cost Hamiltonian."""
+    prob = qaoa_p1_probabilities(diag_E, gamma, beta)
     return float(np.dot(prob, diag_E))
 
 
@@ -400,13 +414,14 @@ def proxy_cost_distribution(scaled_E: np.ndarray, gamma: float) -> np.ndarray:
 
 
 def proxy_qaoa_probabilities(diag_E: np.ndarray, gamma: float, beta: float) -> np.ndarray:
-    """Fast QAOA-compatible proxy distribution over the binary lattice.
+    """Fast diagnostic proxy distribution over the binary lattice.
 
     Exact statevector p=1 QAOA for 21 qubits is computationally heavy in a
-    lightweight repository script.  This proxy preserves the same two-angle
-    landscape interface and diagonal QUBO/surrogate objective: gamma controls
-    cost selectivity and beta controls mixing with the uniform superposition.
-    Use --exact-statevector-qaoa for an exact but slow calculation.
+    lightweight repository script. This optional proxy preserves the same
+    two-angle table interface and diagonal QUBO/surrogate objective, but it is
+    not a physical QAOA expectation landscape: gamma controls softmin cost
+    selectivity and beta controls mixing with the uniform distribution. Use it
+    only when --fast-proxy-qaoa is explicitly requested.
     """
     E, scaled_E, _ = scaled_proxy_energies(diag_E)
     p_cost = proxy_cost_distribution(scaled_E, gamma)
@@ -416,7 +431,7 @@ def proxy_qaoa_probabilities(diag_E: np.ndarray, gamma: float, beta: float) -> n
 
 
 def evaluate_qaoa_landscape(
-    diag_E: np.ndarray, grid: int, gamma_max: float = math.pi, beta_max: float = math.pi / 2, exact: bool = False
+    diag_E: np.ndarray, grid: int, gamma_max: float = math.pi, beta_max: float = math.pi / 2, exact: bool = True
 ) -> pd.DataFrame:
     gammas = np.linspace(0.0, gamma_max, grid)
     betas = np.linspace(0.0, beta_max, grid)
@@ -446,7 +461,7 @@ def evaluate_qaoa_landscape(
                         "gamma": gamma,
                         "beta": beta,
                         "expected_surrogate_energy": expE,
-                        "mode": "fast_qaoa_compatible_proxy",
+                        "mode": "fast_diagnostic_proxy_not_qaoa",
                     }
                 )
     return pd.DataFrame(rows)
@@ -457,14 +472,7 @@ def sample_best_from_qaoa(diag_E: np.ndarray, gamma: float, beta: float, shots: 
     rng = np.random.default_rng(seed)
     nstates = diag_E.size
     if exact:
-        nbits = int(round(math.log2(nstates)))
-        E_centered = diag_E - np.mean(diag_E)
-        scale = np.std(E_centered)
-        E_phase = E_centered / scale if scale > 0 else E_centered
-        psi = np.exp(-1j * gamma * E_phase).astype(np.complex128) / math.sqrt(nstates)
-        psi = apply_rx_all_qubits(psi, beta, nbits)
-        prob = np.abs(psi) ** 2
-        prob = prob / prob.sum()
+        prob = qaoa_p1_probabilities(diag_E, gamma, beta)
     else:
         prob = proxy_qaoa_probabilities(diag_E, gamma, beta)
     sampled = rng.choice(nstates, size=shots, replace=True, p=prob)
@@ -596,8 +604,14 @@ def make_plots(out_dir: Path) -> None:
             aspect="auto",
             extent=[land["gamma"].min(), land["gamma"].max(), land["beta"].min(), land["beta"].max()],
         )
-        plt.xlabel("γ")
-        plt.ylabel("β")
+        mode = str(land["mode"].iloc[0]) if "mode" in land.columns and len(land) else "qaoa"
+        mode_label = {
+            "exact_statevector_p1": "exact p=1 statevector QAOA",
+            "fast_diagnostic_proxy_not_qaoa": "fast diagnostic proxy, not QAOA",
+        }.get(mode, mode.replace("_", " "))
+        plt.xlabel("gamma")
+        plt.ylabel("beta")
+        plt.title(mode_label)
         plt.colorbar(label="QAOA expected surrogate energy")
         plt.tight_layout()
         plt.savefig(out_dir / "qaoa_p1_landscape.png", dpi=300)
@@ -612,11 +626,15 @@ def main() -> None:
     parser.add_argument("--fd-step", type=positive_float, default=0.015, help="Finite-difference step for surrogate Hessian")
     parser.add_argument("--bits-per-parameter", type=bits_per_parameter, default=3, help="Binary discretization per parameter, from 1 to 3 in this release script")
     parser.add_argument("--qaoa-grid", type=positive_int, default=9, help="Number of gamma and beta grid points")
-    parser.add_argument("--shots", type=positive_int, default=4096, help="Shot count for sampling best QAOA/proxy bitstring")
-    parser.add_argument("--skip-qaoa", action="store_true", help="Skip QAOA/proxy landscape and use lattice minimum only")
-    parser.add_argument("--exact-statevector-qaoa", action="store_true", help="Use exact p=1 statevector QAOA. This is slow for 21 qubits; default is a fast QAOA-compatible proxy landscape.")
+    parser.add_argument("--shots", type=positive_int, default=4096, help="Shot count for sampling the best QAOA bitstring")
+    parser.add_argument("--skip-qaoa", action="store_true", help="Skip QAOA landscape and use the exact lattice minimum only")
+    parser.add_argument("--exact-statevector-qaoa", action="store_true", help="Compatibility flag; exact p=1 statevector QAOA is now the default.")
+    parser.add_argument("--fast-proxy-qaoa", action="store_true", help="Use the old fast diagnostic proxy instead of exact p=1 QAOA. The proxy is smooth and is not a physical QAOA expectation landscape.")
     parser.add_argument("--seed", type=int, default=123, help="Random seed for QAOA shot sampling")
     args = parser.parse_args()
+
+    if args.exact_statevector_qaoa and args.fast_proxy_qaoa:
+        parser.error("--exact-statevector-qaoa and --fast-proxy-qaoa cannot be used together")
 
     if not args.input.is_file():
         parser.error(f"--input does not exist or is not a file: {args.input}")
@@ -661,23 +679,26 @@ def main() -> None:
     y_lattice = levels[best_indices]
     lattice_params = latent_to_physical(local_displacement_to_latent(y_lattice, x_anchor))
 
-    # Optional exact p=1 QAOA landscape.
+    # Optional p=1 QAOA landscape.
     qaoa_best_state = None
     qaoa_counts = None
     if not args.skip_qaoa:
         diag_E = diagonal_surrogate_energies(c, g, H, levels, args.bits_per_parameter)
-        landscape = evaluate_qaoa_landscape(diag_E, args.qaoa_grid, exact=args.exact_statevector_qaoa)
+        use_exact_qaoa = not args.fast_proxy_qaoa
+        landscape = evaluate_qaoa_landscape(diag_E, args.qaoa_grid, exact=use_exact_qaoa)
         landscape.to_csv(out_dir / "qaoa_p1_landscape.csv", index=False)
         k = int(landscape["expected_surrogate_energy"].idxmin())
         gamma_best = float(landscape.loc[k, "gamma"])
         beta_best = float(landscape.loc[k, "beta"])
-        qaoa_best_state, qaoa_counts = sample_best_from_qaoa(diag_E, gamma_best, beta_best, args.shots, args.seed, exact=args.exact_statevector_qaoa)
+        qaoa_best_state, qaoa_counts = sample_best_from_qaoa(
+            diag_E, gamma_best, beta_best, args.shots, args.seed, exact=use_exact_qaoa
+        )
         qaoa_counts.to_csv(out_dir / "qaoa_sampled_bitstrings.csv", index=False)
         qaoa_indices = state_index_to_lattice_indices(qaoa_best_state, len(PARAM_NAMES), args.bits_per_parameter)
         y_qaoa = levels[qaoa_indices]
         qaoa_params = latent_to_physical(local_displacement_to_latent(y_qaoa, x_anchor))
         qaoa_surrogate_E = float(diag_E[qaoa_best_state])
-        discrete_source = "p1_qaoa_sampled_best"
+        discrete_source = "p1_qaoa_sampled_best" if use_exact_qaoa else "diagnostic_proxy_sampled_best"
         discrete_indices = qaoa_indices
         discrete_y = y_qaoa
         discrete_params = qaoa_params
@@ -686,7 +707,7 @@ def main() -> None:
             "gamma_best": gamma_best,
             "beta_best": beta_best,
             "qaoa_best_state_index": int(qaoa_best_state),
-            "qaoa_landscape_mode": "exact_statevector_p1" if args.exact_statevector_qaoa else "fast_qaoa_compatible_proxy",
+            "qaoa_landscape_mode": "exact_statevector_p1" if use_exact_qaoa else "fast_diagnostic_proxy_not_qaoa",
         }
     else:
         discrete_source = "exact_lattice_minimum_skip_qaoa"
@@ -712,9 +733,24 @@ def main() -> None:
 
     comparison = pd.DataFrame(
         [
-            {"branch": "classical_anchor", "weighted_true_SSE": true_classical_loss, "surrogate_energy": c},
-            {"branch": discrete_source, "weighted_true_SSE": true_discrete_loss, "surrogate_energy": discrete_surrogate_E},
-            {"branch": "exact_lattice_minimum", "weighted_true_SSE": loss_from_latent(physical_to_latent(lattice_params), freq, z_exp), "surrogate_energy": best_surrogate_E},
+            {
+                "branch": "classical_anchor",
+                "unweighted_true_SSE": true_classical_loss,
+                "relative_weighted_SSE": loss_from_latent(x_anchor, freq, z_exp, weighted=True),
+                "surrogate_energy": c,
+            },
+            {
+                "branch": discrete_source,
+                "unweighted_true_SSE": true_discrete_loss,
+                "relative_weighted_SSE": loss_from_latent(physical_to_latent(discrete_params), freq, z_exp, weighted=True),
+                "surrogate_energy": discrete_surrogate_E,
+            },
+            {
+                "branch": "exact_lattice_minimum",
+                "unweighted_true_SSE": loss_from_latent(physical_to_latent(lattice_params), freq, z_exp),
+                "relative_weighted_SSE": loss_from_latent(physical_to_latent(lattice_params), freq, z_exp, weighted=True),
+                "surrogate_energy": best_surrogate_E,
+            },
         ]
     )
     comparison.to_csv(out_dir / "branch_loss_comparison.csv", index=False)
@@ -729,6 +765,7 @@ def main() -> None:
                 "bitstring_by_parameter_msb_first": bitstring,
                 "lattice_level_indices": [int(x) for x in discrete_indices],
                 "qaoa_summary": qaoa_summary,
+                "loss_definition": "unweighted complex SSE over real and imaginary residuals",
                 "true_classical_loss": true_classical_loss,
                 "true_discrete_loss": true_discrete_loss,
                 "surrogate_discrete_energy": discrete_surrogate_E,
@@ -743,8 +780,8 @@ def main() -> None:
 
     print("Shared-objective EIS pipeline completed.")
     print(f"Output directory: {out_dir}")
-    print(f"Classical weighted SSE: {true_classical_loss:.6g}")
-    print(f"Discrete weighted SSE:  {true_discrete_loss:.6g}")
+    print(f"Classical unweighted SSE: {true_classical_loss:.6g}")
+    print(f"Discrete unweighted SSE:  {true_discrete_loss:.6g}")
     print(f"Discrete bitstring: {bitstring}")
 
 
