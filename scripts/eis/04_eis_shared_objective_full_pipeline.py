@@ -490,7 +490,7 @@ def continuous_surrogate_branch(
     H: np.ndarray,
     x_anchor: np.ndarray,
     trust_delta: float,
-) -> Tuple[np.ndarray, np.ndarray, float, Dict[str, float]]:
+) -> Tuple[np.ndarray, np.ndarray, float, Dict[str, object]]:
     """Find the continuous minimum of the local surrogate in the trust region."""
 
     def objective(y: np.ndarray) -> float:

@@ -529,8 +529,12 @@ def slope_only_parameters_from_window(
     v_window: np.ndarray,
     J: float,
     tau_s: float = POLARIZATION_TAU_S,
+    time_origin: float | None = None,
 ) -> tuple[np.ndarray, dict[str, float]]:
-    t_rel = t_window - t_window[0]
+    t_window = np.asarray(t_window, dtype=float)
+    v_window = np.asarray(v_window, dtype=float)
+    origin = float(t_window[0]) if time_origin is None else float(time_origin)
+    t_rel = t_window - origin
     metrics = linear_regression_metrics(t_rel, v_window)
     slope = metrics["slope"]
     if slope >= 0:
@@ -575,13 +579,24 @@ def bootstrap_slope_only_parameters(
     tau_s: float = POLARIZATION_TAU_S,
 ) -> np.ndarray:
     rng = np.random.default_rng(seed)
-    t_rel = t_window - t_window[0]
-    n = len(t_rel)
+    t_window = np.asarray(t_window, dtype=float)
+    v_window = np.asarray(v_window, dtype=float)
+    time_origin = float(t_window[0])
+    n = len(t_window)
     params = []
     for _ in range(n_boot):
         idx = rng.integers(0, n, size=n)
         try:
-            boot_params, _ = slope_only_parameters_from_window(t_rel[idx], v_window[idx], J, tau_s=tau_s)
+            sample_t = t_window[idx]
+            sample_v = v_window[idx]
+            order = np.argsort(sample_t)
+            boot_params, _ = slope_only_parameters_from_window(
+                sample_t[order],
+                sample_v[order],
+                J,
+                tau_s=tau_s,
+                time_origin=time_origin,
+            )
             params.append(boot_params)
         except Exception:
             params.append(np.asarray(p_best, dtype=float).copy())

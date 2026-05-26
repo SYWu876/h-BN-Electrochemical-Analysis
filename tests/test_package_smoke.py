@@ -11,6 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -41,6 +42,15 @@ def load_cv_current_heatmap_module():
         return module
     finally:
         sys.path.pop(0)
+
+
+def load_gcd_utils_module():
+    script = ROOT / "scripts" / "gcd" / "gcd_utils.py"
+    spec = importlib.util.spec_from_file_location("gcd_utils", script)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_readme_and_citation_contact_email_match() -> None:
@@ -127,6 +137,11 @@ def test_integrated_domain_archive_files_are_present() -> None:
     roi_boxes = [(int(row["x"]), int(row["y"]), int(row["width"]), int(row["height"])) for row in roi_rows]
     assert len(set(roi_boxes)) == 5
     assert all(x > 0 and y > 0 and width > 0 and height > 0 for x, y, width, height in roi_boxes)
+
+    tem_summary = json.loads((ROOT / "data" / "processed" / "TEM" / "TEM_ensemble_summary.json").read_text())
+    descriptor_source = tem_summary["descriptor_source"]
+    assert descriptor_source == "data/processed/TEM/TEM_descriptors.csv"
+    assert not re.match(r"^[A-Za-z]:", descriptor_source)
 
     with (ROOT / "data" / "processed" / "TEM" / "TEM_descriptors.csv").open(newline="", encoding="utf-8") as f:
         assert next(csv.reader(f)) == [
@@ -236,11 +251,37 @@ def test_gcd_outputs_use_unified_bounded_fit_contract() -> None:
     assert "\"raw_V\"" in gcd_text
     assert "masked_domain_reporting_resistance" in gcd_text
 
+    integrated_text = (ROOT / "scripts" / "integrated" / "00_build_cross_domain_evidence.py").read_text(
+        encoding="utf-8"
+    )
+    assert "Csp_best_F_g" not in integrated_text
+    assert "Rs_best_ohm_g" not in integrated_text
+    assert "deltaV_IR_mV_from_bestRs" not in integrated_text
+
     readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
     note_s9_text = (ROOT / "docs" / "Note_S9_GitHub_v4.md").read_text(encoding="utf-8")
     assert "--use-reference-final-table" not in readme_text + note_s9_text
     assert "flattest quasi-linear segment" in readme_text
     assert "one shared algorithm" in note_s9_text
+
+
+def test_gcd_bootstrap_uses_fixed_window_time_origin() -> None:
+    module = load_gcd_utils_module()
+    t_window = np.linspace(10.0, 20.0, 12)
+    v_window = 1.25 - 0.02 * (t_window - t_window[0])
+    p_best, _ = module.slope_only_parameters_from_window(t_window, v_window, J=2.0)
+
+    boot_params = module.bootstrap_slope_only_parameters(
+        t_window,
+        v_window,
+        J=2.0,
+        p_best=p_best,
+        n_boot=25,
+        seed=7,
+    )
+
+    assert boot_params[:, 0].tolist() == pytest.approx([p_best[0]] * len(boot_params), abs=1e-10)
+    assert boot_params[:, 2].tolist() == pytest.approx([p_best[2]] * len(boot_params), abs=1e-10)
 
 
 def test_xps_outputs_use_si_aligned_c1s_reporting_values() -> None:

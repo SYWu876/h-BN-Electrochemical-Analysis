@@ -146,6 +146,17 @@ def copy_file_if_different(source: Path, destination: Path) -> None:
     destination.write_bytes(source.read_bytes())
 
 
+def portable_source_path(path: Path, repo_root: Optional[Path] = None) -> str:
+    if repo_root is not None:
+        try:
+            return path.resolve().relative_to(repo_root.resolve()).as_posix()
+        except ValueError:
+            pass
+    if path.is_absolute():
+        return path.name
+    return path.as_posix()
+
+
 def load_image(path: Path) -> np.ndarray:
     """Load an image as float grayscale in [0, 1]."""
     suffix = path.suffix.lower()
@@ -587,7 +598,8 @@ def reference_descriptors_to_tables(
     descriptor_csv: Path,
     geometric_eps: float,
     normalized_csv: Optional[Path] = None,
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    repo_root: Optional[Path] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, object]]:
     if not np.isfinite(geometric_eps) or geometric_eps <= 0:
         raise ValueError("geometric_eps must be a finite value greater than 0")
     if not descriptor_csv.exists():
@@ -641,7 +653,7 @@ def reference_descriptors_to_tables(
 
     metadata = {
         "geometric_eps": float(geometric_eps),
-        "descriptor_source": str(descriptor_csv),
+        "descriptor_source": portable_source_path(descriptor_csv, repo_root=repo_root),
         "ensemble_centroid_LOI": float(np.sum(df["LOI_0_100"].to_numpy(dtype=float) * wi_norm)),
         "ensemble_centroid_Delta_q_FFT": float(np.sum(df["Delta_q_FFT"].to_numpy(dtype=float) * wi_norm)),
         "ordering_rank": " > ".join(df.sort_values("LOI_0_100", ascending=False)["ROI"].tolist()),
@@ -745,7 +757,7 @@ def save_roi_selection_overlay(source_image: Path, roi_csv: Path, out_dir: Path)
 
 
 
-def plot_figure_1g(df: pd.DataFrame, metadata: Dict[str, float], out_dir: Path) -> None:
+def plot_figure_1g(df: pd.DataFrame, metadata: Dict[str, object], out_dir: Path) -> None:
     set_plot_style(1.15)
     fig, ax = plt.subplots(figsize=(6.0, 5.2), dpi=300)
 
@@ -753,8 +765,8 @@ def plot_figure_1g(df: pd.DataFrame, metadata: Dict[str, float], out_dir: Path) 
     y = df["Delta_q_FFT"].to_numpy()
     ax.scatter(x, y, s=70)
 
-    cx = metadata["ensemble_centroid_LOI"]
-    cy = metadata["ensemble_centroid_Delta_q_FFT"]
+    cx = float(metadata["ensemble_centroid_LOI"])
+    cy = float(metadata["ensemble_centroid_Delta_q_FFT"])
     ax.scatter([cx], [cy], marker="*", s=180)
 
     median_x = float(np.median(x))
@@ -896,6 +908,7 @@ def main() -> None:
             descriptor_csv,
             geometric_eps=args.geometric_eps,
             normalized_csv=normalized_descriptor_csv,
+            repo_root=repo_root,
         )
 
     descriptor_out = out_dir / "TEM_descriptors.csv"

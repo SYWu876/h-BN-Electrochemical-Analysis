@@ -115,14 +115,9 @@ def collect_gcd(root: Path, rows: list[dict[str, object]]) -> None:
     reference_rel = "data/processed/GCD/tables/hBN_GCD_bounded_fit_summary_final.csv"
     rel = current_rel if (root / current_rel).exists() else reference_rel
     df = pd.read_csv(root / rel)
-    if "Csp_best_F_g" in df.columns:
-        csp = df["Csp_best_F_g"]
-        rs = df["Rs_best_ohm_g"]
-        ir_drop = df["deltaV_IR_mV_from_bestRs"]
-    else:
-        csp = df["Csp_base_F_g^-1"]
-        rs = df["Rs_base_ohm"]
-        ir_drop = df["effective_IR_drop_base_mV"]
+    csp = df["Csp_base_F_g^-1"]
+    rs = df["Rs_base_ohm"]
+    ir_drop = df["effective_IR_drop_base_mV"]
     add_descriptor(rows, "GCD", "Csp_mean_F_g-1", csp.mean(), "F g^-1", rel)
     add_descriptor(rows, "GCD", "Csp_max_F_g-1", csp.max(), "F g^-1", rel)
     add_descriptor(rows, "GCD", "Rs_mean_ohm", rs.mean(), "Ohm", rel)
