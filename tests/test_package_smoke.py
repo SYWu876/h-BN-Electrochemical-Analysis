@@ -181,6 +181,102 @@ def test_integrated_domain_archive_files_are_present() -> None:
     assert tem_image.stat().st_size > 0
 
 
+def test_gcd_outputs_use_unified_bounded_fit_contract() -> None:
+    final_summary = pd.read_csv(
+        ROOT / "data" / "processed" / "GCD" / "tables" / "hBN_GCD_bounded_fit_summary_final.csv"
+    )
+    public_summary = pd.read_csv(
+        ROOT / "data" / "processed" / "GCD" / "tables" / "hBN_GCD_fit_summary_J1_to_J5.csv"
+    )
+    pd.testing.assert_frame_equal(final_summary, public_summary)
+
+    expected_csp = [
+        99.0876457235766,
+        90.02908328210498,
+        82.62651540927513,
+        70.89006794626557,
+        61.27702420765139,
+    ]
+    assert final_summary["Csp_base_F_g^-1"].to_list() == pytest.approx(expected_csp, rel=1e-8)
+    assert final_summary["Csp_base_F_g^-1"].is_monotonic_decreasing
+    assert set(final_summary["window_selection_method"]) == {"flattest_linear_post_ir_window"}
+    assert (final_summary["flatness_score"] > 0).all()
+    assert final_summary["tau_base_s"].to_list() == pytest.approx([9.0] * 5)
+    assert final_summary["A_base"].to_list() == pytest.approx([0.0] * 5)
+    assert final_summary["Rs_base_ohm"].to_list() == pytest.approx(
+        [
+            0.00986700312913102,
+            0.009732716467688456,
+            0.009627444607500105,
+            0.009465826381994863,
+            0.009339393602113992,
+        ],
+        rel=1e-8,
+    )
+    assert final_summary["effective_IR_drop_base_mV"].to_list() == pytest.approx(
+        [
+            9.86700312913102,
+            19.465432935376914,
+            28.882333822500314,
+            37.86330552797945,
+            46.69696801056996,
+        ],
+        rel=1e-8,
+    )
+
+    gcd_text = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((ROOT / "scripts" / "gcd").glob("*.py"))
+    )
+    assert "--use-reference-final-table" not in gcd_text
+    assert "table_s3_path" not in gcd_text
+    assert "slope_only_parameters_from_window" in gcd_text
+    assert "flattest_linear_post_ir_window" in gcd_text
+    assert "SLOPE_MIN_VOLTAGE_SPAN_FRACTION" in gcd_text
+    assert "\"raw_V\"" in gcd_text
+    assert "masked_domain_reporting_resistance" in gcd_text
+
+    readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
+    note_s9_text = (ROOT / "docs" / "Note_S9_GitHub_v4.md").read_text(encoding="utf-8")
+    assert "--use-reference-final-table" not in readme_text + note_s9_text
+    assert "flattest quasi-linear segment" in readme_text
+    assert "one shared algorithm" in note_s9_text
+
+
+def test_xps_outputs_use_si_aligned_c1s_reporting_values() -> None:
+    expected_labels = ["C–C", "C–O", "C=O", "O–C=O"]
+    expected_centers = [284.59, 285.50, 286.35, 288.43]
+    expected_fwhm = [1.50, 0.85, 1.45, 6.00]
+    expected_area = [0.7161, 0.0967, 0.0923, 0.0949]
+
+    descriptor = pd.read_csv(ROOT / "data" / "processed" / "XPS" / "XPS_corrected_13peak_descriptor_matrix.csv")
+    c1s_descriptor = descriptor[descriptor["Region"].eq("C1s")].reset_index(drop=True)
+    assert c1s_descriptor["Label"].to_list() == expected_labels
+    assert c1s_descriptor["Center_eV"].to_list() == pytest.approx(expected_centers)
+    assert c1s_descriptor["FWHM_eV"].to_list() == pytest.approx(expected_fwhm)
+    assert c1s_descriptor["Area_fraction"].to_list() == pytest.approx(expected_area)
+
+    profile = pd.read_csv(ROOT / "data" / "processed" / "XPS" / "C1s_profile_fit_summary.csv")
+    assert profile["Label"].to_list() == expected_labels
+    assert profile["Center_eV"].to_list() == pytest.approx(expected_centers)
+    assert profile["FWHM_eV"].to_list() == pytest.approx(expected_fwhm)
+    assert profile["Area_fraction"].to_list() == pytest.approx(expected_area)
+
+    fit_summary = pd.read_csv(ROOT / "data" / "processed" / "XPS" / "XPS_C1s_fit_summary.csv")
+    assert fit_summary["Center (eV)"].to_list() == pytest.approx(expected_centers)
+    assert fit_summary["Approx. FWHM (eV)"].to_list() == pytest.approx(expected_fwhm)
+    assert fit_summary["Relative area fraction"].to_list() == pytest.approx(expected_area)
+
+    assignments = pd.read_csv(ROOT / "data" / "processed" / "XPS" / "XPS_13_peak_assignments.csv")
+    c1s_assignments = assignments[assignments["Region"].eq("C1s")].reset_index(drop=True)
+    assert c1s_assignments["Label"].to_list() == expected_labels
+    assert c1s_assignments["Area_fraction"].to_list() == pytest.approx(expected_area)
+
+    ml_script = (ROOT / "scripts" / "xps" / "03_ml_analysis_ns15_ef.py").read_text(encoding="utf-8")
+    assert "component_area_fractions" not in ml_script
+    assert "fit_fixed_centers" not in ml_script
+
+
 def test_qc_circuit_notebook_is_manuscript_facing() -> None:
     notebook = json.loads(
         (ROOT / "scripts" / "qc_circuit" / "generate_gcd_eis_qc_circuits.ipynb").read_text(
@@ -462,7 +558,9 @@ def test_full_shared_objective_pipeline_writes_manuscript_slices(tmp_path: Path)
         "qaoa_p1_landscape.csv",
         "decoded_bitstring_summary.json",
         "nyquist_classical_discrete.png",
+        "nyquist_classical_continuous_discrete.png",
         "qaoa_p1_landscape.png",
+        "eis_fitted_spectra_classical_continuous_discrete.csv",
     ]
     for output_name in expected_outputs:
         output = output_dir / output_name
@@ -476,9 +574,13 @@ def test_full_shared_objective_pipeline_writes_manuscript_slices(tmp_path: Path)
     assert 20.0 < rct < 50.0
     branch_loss = pd.read_csv(output_dir / "branch_loss_comparison.csv")
     assert {"unweighted_true_SSE", "relative_weighted_SSE", "surrogate_energy"}.issubset(branch_loss.columns)
+    assert "continuous_surrogate_minimum" in set(branch_loss["branch"])
+    spectra = pd.read_csv(output_dir / "eis_fitted_spectra_classical_continuous_discrete.csv")
+    assert {"Zreal_continuous_ohm", "minus_Zimag_continuous_ohm", "phase_continuous_deg"}.issubset(spectra.columns)
     with (output_dir / "decoded_bitstring_summary.json").open(encoding="utf-8") as f:
         decoded_summary = json.load(f)
     assert decoded_summary["qaoa_summary"]["qaoa_landscape_mode"] == "exact_statevector_p1"
+    assert decoded_summary["continuous_branch"]["source"] == "continuous_surrogate_minimum"
     assert decoded_summary["loss_definition"] == "unweighted complex SSE over real and imaginary residuals"
 
     with (output_dir / "R1_Q1_slice.csv").open(newline="", encoding="utf-8") as f:

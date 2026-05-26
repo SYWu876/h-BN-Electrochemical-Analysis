@@ -6,22 +6,15 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from scipy.cluster.hierarchy import linkage, leaves_list
-from utils_xps import build_descriptor_matrix, ensure_dir, MARKER_MAP
+from utils_xps import canonical_descriptor_dataframe, ensure_dir, MARKER_MAP
 
 ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data" / "raw" / "XPS" / "HBN.xlsx"
-if not RAW.exists():
-    candidates = list((ROOT / "data" / "raw" / "XPS").glob("HBN*.xls*"))
-    if not candidates:
-        raise FileNotFoundError("No raw HBN .xls/.xlsx file found in data/raw/XPS/")
-    RAW = candidates[0]
-
 OUT_FIG = ROOT / "outputs" / "figures" / "XPS"
 OUT_DATA = ROOT / "data" / "processed" / "XPS"
 ensure_dir(OUT_FIG)
 ensure_dir(OUT_DATA)
 
-ml_df = build_descriptor_matrix(RAW)
+ml_df = canonical_descriptor_dataframe()
 
 # PCA
 X = StandardScaler().fit_transform(ml_df[["DeltaE_eV", "FWHM_eV", "Area_fraction", "Eta"]].to_numpy())
@@ -30,6 +23,7 @@ scores = pca.fit_transform(X)
 ml_df["PC1"] = scores[:, 0]
 ml_df["PC2"] = scores[:, 1]
 ml_df.to_csv(OUT_DATA / "XPS_corrected_13peak_descriptor_matrix.csv", index=False)
+ml_df.to_csv(OUT_DATA / "XPS_corrected_13peak_descriptor_matrix_plot_data.csv", index=False)
 
 plt.rcParams.update({
     "font.family": "DejaVu Sans",
