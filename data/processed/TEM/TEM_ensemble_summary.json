@@ -1,0 +1,7 @@
+{
+  "geometric_eps": 0.05,
+  "descriptor_source": "D:\\h-BN\\h-BN-Electrochemical-Analysis\\data\\processed\\TEM\\TEM_descriptors.csv",
+  "ensemble_centroid_LOI": 72.61816761816762,
+  "ensemble_centroid_Delta_q_FFT": 4.416790408790408,
+  "ordering_rank": "ROI-3 > ROI-4 > ROI-2 > ROI-5 > ROI-1"
+}

@@ -11,10 +11,11 @@ least-squares fit of the compact non-ideal circuit,
 
 builds a local quadratic surrogate around the classical anchor in latent
 parameter space (log coordinates for positive parameters and logit coordinates
-for alpha values), discretizes that local trust region using 3 bits per
-parameter, maps the surrogate to a QUBO/Ising-style binary objective, evaluates
-an exact p=1 statevector QAOA angle landscape over the discretized trust-region
-lattice, decodes the best sampled bitstring, and exports spectra, tables,
+for alpha values), solves the continuous surrogate branch, discretizes that
+local trust region using 3 bits per parameter, maps the surrogate to a
+QUBO/Ising-style binary objective, evaluates an exact p=1 statevector QAOA
+angle landscape over the discretized trust-region lattice, decodes the best
+sampled bitstring, and exports spectra, tables,
 surrogate slices, landscape tables, and decoded results. The exported slice
 columns named normalized_x/y are local latent displacements kept for
 compatibility with the release package. A fast diagnostic proxy is available
@@ -47,7 +48,7 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, minimize
 import matplotlib.pyplot as plt
 
 
@@ -483,6 +484,36 @@ def sample_best_from_qaoa(diag_E: np.ndarray, gamma: float, beta: float, shots: 
     return best_state, counts
 
 
+def continuous_surrogate_branch(
+    c: float,
+    g: np.ndarray,
+    H: np.ndarray,
+    x_anchor: np.ndarray,
+    trust_delta: float,
+) -> Tuple[np.ndarray, np.ndarray, float, Dict[str, float]]:
+    """Find the continuous minimum of the local surrogate in the trust region."""
+
+    def objective(y: np.ndarray) -> float:
+        return float(surrogate_energy(y, c, g, H))
+
+    bounds = [(-float(trust_delta), float(trust_delta)) for _ in range(len(PARAM_NAMES))]
+    result = minimize(
+        objective,
+        np.zeros(len(PARAM_NAMES), dtype=float),
+        method="L-BFGS-B",
+        bounds=bounds,
+        options={"maxiter": 2000, "ftol": 1e-14},
+    )
+    y_continuous = np.asarray(result.x, dtype=float)
+    params_continuous = latent_to_physical(local_displacement_to_latent(y_continuous, x_anchor))
+    stats = {
+        "success": bool(result.success),
+        "surrogate_energy": float(result.fun),
+        "nit": int(getattr(result, "nit", 0)),
+    }
+    return params_continuous, y_continuous, float(result.fun), stats
+
+
 def state_index_to_lattice_indices(state_index: int, n_params: int, bits: int) -> np.ndarray:
     indices = []
     for p in range(n_params):
@@ -498,11 +529,13 @@ def export_spectra(
     out_dir: Path,
     df: pd.DataFrame,
     classical_params: np.ndarray,
+    continuous_params: np.ndarray,
     discrete_params: np.ndarray,
 ) -> None:
     f = df["frequency_Hz"].to_numpy(float)
     z_exp = df["Zreal_ohm"].to_numpy(float) - 1j * df["minus_Zimag_ohm"].to_numpy(float)
     z_classical = circuit_impedance(classical_params, f)
+    z_continuous = circuit_impedance(continuous_params, f)
     z_discrete = circuit_impedance(discrete_params, f)
     out = pd.DataFrame(
         {
@@ -511,17 +544,22 @@ def export_spectra(
             "minus_Zimag_exp_ohm": -z_exp.imag,
             "Zreal_classical_ohm": z_classical.real,
             "minus_Zimag_classical_ohm": -z_classical.imag,
+            "Zreal_continuous_ohm": z_continuous.real,
+            "minus_Zimag_continuous_ohm": -z_continuous.imag,
             "Zreal_discrete_ohm": z_discrete.real,
             "minus_Zimag_discrete_ohm": -z_discrete.imag,
             "absZ_exp_ohm": np.abs(z_exp),
             "absZ_classical_ohm": np.abs(z_classical),
+            "absZ_continuous_ohm": np.abs(z_continuous),
             "absZ_discrete_ohm": np.abs(z_discrete),
             "phase_exp_deg": np.angle(z_exp, deg=True),
             "phase_classical_deg": np.angle(z_classical, deg=True),
+            "phase_continuous_deg": np.angle(z_continuous, deg=True),
             "phase_discrete_deg": np.angle(z_discrete, deg=True),
         }
     )
     out.to_csv(out_dir / "eis_fitted_spectra_classical_discrete.csv", index=False)
+    out.to_csv(out_dir / "eis_fitted_spectra_classical_continuous_discrete.csv", index=False)
 
 
 def export_surrogate_slices(out_dir: Path, c: float, g: np.ndarray, H: np.ndarray, trust_delta: float) -> None:
@@ -580,16 +618,28 @@ def export_surrogate_slices(out_dir: Path, c: float, g: np.ndarray, H: np.ndarra
 
 
 def make_plots(out_dir: Path) -> None:
-    spec = pd.read_csv(out_dir / "eis_fitted_spectra_classical_discrete.csv")
+    spectra_path = out_dir / "eis_fitted_spectra_classical_continuous_discrete.csv"
+    if not spectra_path.exists():
+        spectra_path = out_dir / "eis_fitted_spectra_classical_discrete.csv"
+    spec = pd.read_csv(spectra_path)
     plt.figure(figsize=(5.2, 4.6))
     plt.plot(spec["Zreal_exp_ohm"], spec["minus_Zimag_exp_ohm"], "o", ms=4, label="Raw EIS")
     plt.plot(spec["Zreal_classical_ohm"], spec["minus_Zimag_classical_ohm"], "-", lw=2, label="Classical fit")
+    if {"Zreal_continuous_ohm", "minus_Zimag_continuous_ohm"}.issubset(spec.columns):
+        plt.plot(
+            spec["Zreal_continuous_ohm"],
+            spec["minus_Zimag_continuous_ohm"],
+            "-.",
+            lw=2,
+            label="Continuous fit",
+        )
     plt.plot(spec["Zreal_discrete_ohm"], spec["minus_Zimag_discrete_ohm"], "--", lw=2, label="Decoded discrete")
     plt.xlabel("Z' (Ω)")
     plt.ylabel("-Z'' (Ω)")
     plt.legend(frameon=False)
     plt.tight_layout()
     plt.savefig(out_dir / "nyquist_classical_discrete.png", dpi=300)
+    plt.savefig(out_dir / "nyquist_classical_continuous_discrete.png", dpi=300)
     plt.close()
 
     landscape_path = out_dir / "qaoa_p1_landscape.csv"
@@ -675,6 +725,13 @@ def main() -> None:
         )
 
     levels = levels_for_bits(args.bits_per_parameter, args.trust_delta)
+    continuous_params, continuous_y, continuous_surrogate_E, continuous_stats = continuous_surrogate_branch(
+        c,
+        g,
+        H,
+        x_anchor,
+        args.trust_delta,
+    )
     best_indices, best_surrogate_E, best_linear_index = enumerate_lattice_minimum(c, g, H, levels)
     y_lattice = levels[best_indices]
     lattice_params = latent_to_physical(local_displacement_to_latent(y_lattice, x_anchor))
@@ -718,12 +775,15 @@ def main() -> None:
         qaoa_summary = {}
 
     true_classical_loss = loss_from_latent(x_anchor, freq, z_exp)
+    true_continuous_loss = loss_from_latent(physical_to_latent(continuous_params), freq, z_exp)
     true_discrete_loss = loss_from_latent(physical_to_latent(discrete_params), freq, z_exp)
 
     decoded_df = pd.DataFrame(
         {
             "parameter": PARAM_NAMES,
             "classical_anchor": classical_params,
+            "continuous_surrogate_branch": continuous_params,
+            "local_y_continuous": continuous_y,
             "decoded_discrete": discrete_params,
             "local_y_discrete": discrete_y,
             "lattice_level_index": discrete_indices,
@@ -746,6 +806,12 @@ def main() -> None:
                 "surrogate_energy": discrete_surrogate_E,
             },
             {
+                "branch": "continuous_surrogate_minimum",
+                "unweighted_true_SSE": true_continuous_loss,
+                "relative_weighted_SSE": loss_from_latent(physical_to_latent(continuous_params), freq, z_exp, weighted=True),
+                "surrogate_energy": continuous_surrogate_E,
+            },
+            {
                 "branch": "exact_lattice_minimum",
                 "unweighted_true_SSE": loss_from_latent(physical_to_latent(lattice_params), freq, z_exp),
                 "relative_weighted_SSE": loss_from_latent(physical_to_latent(lattice_params), freq, z_exp, weighted=True),
@@ -765,16 +831,23 @@ def main() -> None:
                 "bitstring_by_parameter_msb_first": bitstring,
                 "lattice_level_indices": [int(x) for x in discrete_indices],
                 "qaoa_summary": qaoa_summary,
+                "continuous_branch": {
+                    "source": "continuous_surrogate_minimum",
+                    "local_y_continuous": [float(x) for x in continuous_y],
+                    "optimization_stats": continuous_stats,
+                },
                 "loss_definition": "unweighted complex SSE over real and imaginary residuals",
                 "true_classical_loss": true_classical_loss,
+                "true_continuous_loss": true_continuous_loss,
                 "true_discrete_loss": true_discrete_loss,
+                "surrogate_continuous_energy": continuous_surrogate_E,
                 "surrogate_discrete_energy": discrete_surrogate_E,
             },
             fh,
             indent=2,
         )
 
-    export_spectra(out_dir, df, classical_params, discrete_params)
+    export_spectra(out_dir, df, classical_params, continuous_params, discrete_params)
     export_surrogate_slices(out_dir, c, g, H, args.trust_delta)
     make_plots(out_dir)
 

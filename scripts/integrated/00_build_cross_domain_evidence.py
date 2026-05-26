@@ -86,12 +86,10 @@ def collect_raman(root: Path, rows: list[dict[str, object]]) -> None:
 
 
 def collect_xps(root: Path, rows: list[dict[str, object]]) -> None:
-    peaks_rel = "data/processed/XPS/XPS_13_peak_assignments.csv"
     matrix_rel = "data/processed/XPS/XPS_corrected_13peak_descriptor_matrix.csv"
-    peaks = pd.read_csv(root / peaks_rel)
     matrix = pd.read_csv(root / matrix_rel)
-    add_descriptor(rows, "XPS", "defect_area_fraction_sum", peaks[peaks["Label"].str.contains("def", case=False)]["Area_fraction"].sum(), "-", peaks_rel)
-    add_descriptor(rows, "XPS", "oxidized_area_fraction_sum", peaks[peaks["Label"].str.contains("ox|O-", case=False, regex=True)]["Area_fraction"].sum(), "-", peaks_rel)
+    add_descriptor(rows, "XPS", "defect_area_fraction_sum", matrix[matrix["Label"].str.contains("def", case=False)]["Area_fraction"].sum(), "-", matrix_rel)
+    add_descriptor(rows, "XPS", "oxidized_area_fraction_sum", matrix[matrix["Label"].str.contains("ox|O-", case=False, regex=True)]["Area_fraction"].sum(), "-", matrix_rel)
     add_descriptor(rows, "XPS", "pc1_mean", matrix["PC1"].mean(), "-", matrix_rel)
     add_descriptor(rows, "XPS", "pc2_span", matrix["PC2"].max() - matrix["PC2"].min(), "-", matrix_rel)
 
@@ -113,12 +111,22 @@ def collect_cv(root: Path, rows: list[dict[str, object]]) -> None:
 
 
 def collect_gcd(root: Path, rows: list[dict[str, object]]) -> None:
-    rel = "data/processed/GCD/tables/hBN_GCD_bounded_fit_summary_final.csv"
+    current_rel = "data/processed/GCD/tables/hBN_GCD_fit_summary_J1_to_J5.csv"
+    reference_rel = "data/processed/GCD/tables/hBN_GCD_bounded_fit_summary_final.csv"
+    rel = current_rel if (root / current_rel).exists() else reference_rel
     df = pd.read_csv(root / rel)
-    add_descriptor(rows, "GCD", "Csp_base_mean_F_g-1", df["Csp_base_F_g^-1"].mean(), "F g^-1", rel)
-    add_descriptor(rows, "GCD", "Csp_base_max_F_g-1", df["Csp_base_F_g^-1"].max(), "F g^-1", rel)
-    add_descriptor(rows, "GCD", "Rs_base_mean_ohm", df["Rs_base_ohm"].mean(), "Ohm", rel)
-    add_descriptor(rows, "GCD", "IRdrop_max_mV", df["effective_IR_drop_base_mV"].max(), "mV", rel)
+    if "Csp_best_F_g" in df.columns:
+        csp = df["Csp_best_F_g"]
+        rs = df["Rs_best_ohm_g"]
+        ir_drop = df["deltaV_IR_mV_from_bestRs"]
+    else:
+        csp = df["Csp_base_F_g^-1"]
+        rs = df["Rs_base_ohm"]
+        ir_drop = df["effective_IR_drop_base_mV"]
+    add_descriptor(rows, "GCD", "Csp_mean_F_g-1", csp.mean(), "F g^-1", rel)
+    add_descriptor(rows, "GCD", "Csp_max_F_g-1", csp.max(), "F g^-1", rel)
+    add_descriptor(rows, "GCD", "Rs_mean_ohm", rs.mean(), "Ohm", rel)
+    add_descriptor(rows, "GCD", "IRdrop_max_mV", ir_drop.max(), "mV", rel)
 
 
 def collect_eis(root: Path, rows: list[dict[str, object]]) -> None:

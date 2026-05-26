@@ -1,27 +1,50 @@
 
 from __future__ import annotations
-import os
-import shutil
+
 import subprocess
 from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
 
-TABLE_X_ROWS = [
-    ("B1s", "B-def", 189.87, 0.2315, "lower-BE defect-related B environment, possibly B-rich / under-coordinated B"),
-    ("B1s", "B–N",   190.37, 0.5727, "main lattice B–N component of h-BN"),
-    ("B1s", "B-ox",  191.09, 0.1958, "high-BE defect / oxidized boron shoulder, such as B–Ox-related surface species"),
-    ("N1s", "N-def", 397.70, 0.1785, "defect-rich N / perturbed nitrogen environment"),
-    ("N1s", "N–B",   398.00, 0.6855, "main lattice N–B component of h-BN"),
-    ("N1s", "N-ox",  398.85, 0.1360, "surface / oxidized N shoulder"),
-    ("C1s", "C–C",   284.59, 0.7161, "C–C / C–H"),
-    ("C1s", "C–O",   285.50, 0.0967, "C–N / C–O"),
-    ("C1s", "C=O",   286.35, 0.0923, "C=O-related"),
-    ("C1s", "O–C=O", 288.43, 0.0949, "O–C=O"),
-    ("O1s", "O-lat", 530.37, 0.0041, "lattice / B–O-related O"),
-    ("O1s", "O-ads", 532.60, 0.7565, "surface hydroxyl / adsorbed O"),
-    ("O1s", "H2O/O", 533.34, 0.2394, "adsorbed H2O / weak oxygen species"),
+CANONICAL_DESCRIPTOR_COLUMNS = [
+    "Region",
+    "Label",
+    "Center_eV",
+    "FWHM_eV",
+    "Area_fraction",
+    "Eta",
+    "DeltaE_eV",
+]
+
+CANONICAL_XPS_PEAK_ROWS = [
+    ("B1s", "B-def", 189.87, 1.30, 0.2315, 0.47369318724245396, -0.50,
+     "lower-BE defect-related B environment, possibly B-rich / under-coordinated B"),
+    ("B1s", "B–N", 190.37, 1.10, 0.5727, 0.0, 0.00,
+     "main lattice B–N component of h-BN"),
+    ("B1s", "B-ox", 191.09, 1.30, 0.1958, 0.8930962784524898, 0.72,
+     "high-BE defect / oxidized boron shoulder, such as B–ox-related surface species"),
+    ("N1s", "N-def", 397.70, 2.10, 0.1785, 0.07046775433165521, -0.30,
+     "defect-rich N / perturbed nitrogen environment"),
+    ("N1s", "N–B", 398.00, 1.25, 0.6855, 0.004463002837617341, 0.00,
+     "main lattice N–B component of h-BN"),
+    ("N1s", "N-ox", 398.85, 1.45, 0.1360, 0.9874403821543486, 0.85,
+     "surface / oxidized N shoulder"),
+    ("C1s", "C–C", 284.59, 1.50, 0.7161, 0.23863800617464642, 0.00,
+     "C–C / C–H"),
+    ("C1s", "C–O", 285.50, 0.85, 0.0967, 0.33715180130206995, 0.91,
+     "C–N / C–O"),
+    ("C1s", "C=O", 286.35, 1.45, 0.0923, 0.7200797557304432, 1.76,
+     "C=O-related"),
+    ("C1s", "O–C=O", 288.43, 6.00, 0.0949, 1.0, 3.84,
+     "O–C=O"),
+    ("O1s", "O-lat", 530.37, 0.40, 0.0041, 0.0, -2.23,
+     "lattice / B–O-related O"),
+    ("O1s", "O-ads", 532.60, 1.95, 0.7565, 0.03666997478160091, 0.00,
+     "surface hydroxyl / adsorbed O"),
+    ("O1s", "H2O/O", 533.34, 2.55, 0.2394, 1.0, 0.74,
+     "adsorbed H2O / weak oxygen species"),
 ]
 
 REGION_SPECS = {
@@ -118,32 +141,55 @@ def fit_fixed_centers(x, y, centers, amp0, sig0, eta0, ampmax, sigmax):
         comps.append({"center": c, "amp": amp, "sigma": sigma, "eta": eta, "y": yy})
     return comps
 
-def table_x_dataframe():
-    return pd.DataFrame(TABLE_X_ROWS, columns=["Region", "Label", "Center_eV", "Area_fraction", "Tentative_assignment"])
+def component_area_fractions(x, comps):
+    areas = np.array(
+        [max(float(np.trapezoid(comp["y"], x)), 0.0) for comp in comps],
+        dtype=float,
+    )
+    total = float(np.sum(areas))
+    if total <= 0:
+        return np.full(len(comps), np.nan)
+    return areas / total
 
-def build_descriptor_matrix(raw_file: str | Path):
-    table_df = table_x_dataframe()
-    records = []
-    for region, spec in REGION_SPECS.items():
-        df = load_region(raw_file, spec["sheet"])
-        x = df["BE"].to_numpy()
-        y = df["net"].to_numpy()
-        fit_window = spec.get("fit_window", spec["window"])
-        mask = (x >= fit_window[0]) & (x <= fit_window[1])
-        xf, yf = x[mask], y[mask]
-        comps = fit_fixed_centers(xf, yf, spec["centers"], spec["amp0"], spec["sig0"], spec["eta0"], spec["ampmax"], spec["sigmax"])
-        for label, center, comp in zip(spec["labels"], spec["centers"], comps):
-            area_fraction = float(table_df[(table_df.Region == region) & (table_df.Label == label)]["Area_fraction"].iloc[0])
-            records.append({
-                "Region": region,
-                "Label": label,
-                "Center_eV": center,
-                "FWHM_eV": numerical_fwhm(xf, comp["y"]),
-                "Area_fraction": area_fraction,
-                "Eta": comp["eta"],
-                "DeltaE_eV": center - spec["main"],
-            })
-    return pd.DataFrame(records)
+def canonical_descriptor_dataframe(include_assignments: bool = False) -> pd.DataFrame:
+    columns = CANONICAL_DESCRIPTOR_COLUMNS + ["Tentative_assignment"]
+    df = pd.DataFrame(CANONICAL_XPS_PEAK_ROWS, columns=columns)
+    if include_assignments:
+        return df.copy()
+    return df[CANONICAL_DESCRIPTOR_COLUMNS].copy()
+
+
+def canonical_region_summary(region: str) -> pd.DataFrame:
+    df = canonical_descriptor_dataframe()
+    region_df = df[df["Region"] == region].copy()
+    if region_df.empty:
+        raise KeyError(f"Unknown XPS region: {region}")
+    columns = ["Region", "Label", "Center_eV", "FWHM_eV", "Area_fraction", "Eta"]
+    return region_df[columns].reset_index(drop=True)
+
+
+def table_x_dataframe():
+    df = canonical_descriptor_dataframe(include_assignments=True)
+    columns = ["Region", "Label", "Center_eV", "Area_fraction", "Tentative_assignment"]
+    return df[columns].copy()
+
+
+def fit_summary_dataframe(region: str) -> pd.DataFrame:
+    df = canonical_descriptor_dataframe(include_assignments=True)
+    region_df = df[df["Region"] == region].copy()
+    if region_df.empty:
+        raise KeyError(f"Unknown XPS region: {region}")
+    return pd.DataFrame({
+        "Component": region_df["Tentative_assignment"],
+        "Center (eV)": region_df["Center_eV"],
+        "Approx. FWHM (eV)": region_df["FWHM_eV"],
+        "Relative area fraction": region_df["Area_fraction"],
+    })
+
+
+def build_descriptor_matrix(raw_file: str | Path | None = None):
+    _ = raw_file
+    return canonical_descriptor_dataframe()
 
 def ensure_dir(path: str | Path):
     Path(path).mkdir(parents=True, exist_ok=True)

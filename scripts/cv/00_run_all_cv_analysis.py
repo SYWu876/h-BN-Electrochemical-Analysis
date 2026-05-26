@@ -10,6 +10,7 @@ ordered = [
     "04_b_value_profile.py",
     "05_dunn_separation.py",
     "06_ising_qkpca.py",
+    "07_descriptor_summary.py",
 ]
 for name in ordered:
     print(f"Running {name} ...")

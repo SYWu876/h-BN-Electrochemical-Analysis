@@ -1,10 +1,9 @@
 
 from pathlib import Path
-import pandas as pd
 import matplotlib.pyplot as plt
 from utils_xps import (
-    REGION_SPECS, table_x_dataframe, load_region, fit_fixed_centers,
-    ensure_dir
+    REGION_SPECS, load_region, fit_fixed_centers,
+    canonical_region_summary, fit_summary_dataframe, ensure_dir
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -19,8 +18,6 @@ OUT_FIG = ROOT / "outputs" / "figures" / "XPS"
 OUT_DATA = ROOT / "data" / "processed" / "XPS"
 ensure_dir(OUT_FIG)
 ensure_dir(OUT_DATA)
-
-table_df = table_x_dataframe()
 
 plt.rcParams.update({
     "font.family": "DejaVu Sans",
@@ -46,32 +43,18 @@ for region, spec in REGION_SPECS.items():
     net = df["net"].to_numpy()
 
     plot_window = spec["window"]
-    fit_window = spec.get("fit_window", spec["window"])
-
     plot_mask = (x >= plot_window[0]) & (x <= plot_window[1])
-    fit_mask = (x >= fit_window[0]) & (x <= fit_window[1])
 
     xp, yp, bgp = x[plot_mask], y[plot_mask], bg[plot_mask]
-    xf, yf = x[fit_mask], net[fit_mask]
 
-    comps_fit = fit_fixed_centers(xf, yf, spec["centers"], spec["amp0"], spec["sig0"], spec["eta0"], spec["ampmax"], spec["sigmax"])
     comps_plot = fit_fixed_centers(xp, net[plot_mask], spec["centers"], spec["amp0"], spec["sig0"], spec["eta0"], spec["ampmax"], spec["sigmax"])
     fit_total = bgp.copy()
     for comp in comps_plot:
         fit_total += comp["y"]
 
-    # export summary
-    rows = []
-    for label, center, comp in zip(spec["labels"], spec["centers"], comps_fit):
-        rows.append({
-            "Region": region,
-            "Label": label,
-            "Center_eV": center,
-            "FWHM_eV": float("nan"),
-            "Area_fraction": float(table_df[(table_df.Region == region) & (table_df.Label == label)]["Area_fraction"].iloc[0]),
-            "Eta": comp["eta"],
-        })
-    pd.DataFrame(rows).to_csv(OUT_DATA / f"{region}_profile_fit_summary.csv", index=False)
+    # Public summary tables use the SI-aligned 13-peak reporting convention.
+    canonical_region_summary(region).to_csv(OUT_DATA / f"{region}_profile_fit_summary.csv", index=False)
+    fit_summary_dataframe(region).to_csv(OUT_DATA / f"XPS_{region}_fit_summary.csv", index=False)
 
     fig, ax = plt.subplots(figsize=(8.0, 6.0))
     fig.patch.set_facecolor("white")

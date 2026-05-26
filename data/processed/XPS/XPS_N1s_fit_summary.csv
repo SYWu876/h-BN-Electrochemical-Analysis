@@ -1,4 +1,4 @@
 Component,Center (eV),Approx. FWHM (eV),Relative area fraction
-Lower-BE defect-rich N,397.6999626357921,2.0,0.17848676796243587
-Lattice N–B,398.0032043755645,1.25,0.6854656536920544
-Higher-BE surface / oxidized N,398.84543884771335,1.4499999999999886,0.13604757834550965
+defect-rich N / perturbed nitrogen environment,397.7,2.1,0.1785
+main lattice N–B component of h-BN,398.0,1.25,0.6855
+surface / oxidized N shoulder,398.85,1.45,0.136

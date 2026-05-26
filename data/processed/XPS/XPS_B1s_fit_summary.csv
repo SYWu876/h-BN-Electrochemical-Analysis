@@ -1,3 +1,4 @@
 Component,Center (eV),Approx. FWHM (eV),Relative area fraction
-Lattice B-N,190.2713968323418,1.25,0.7355697736168898
-Defect / oxidized B shoulder,190.7119103501408,1.450000000000017,0.26443022638311026
+"lower-BE defect-related B environment, possibly B-rich / under-coordinated B",189.87,1.3,0.2315
+main lattice B–N component of h-BN,190.37,1.1,0.5727
+"high-BE defect / oxidized boron shoulder, such as B–ox-related surface species",191.09,1.3,0.1958

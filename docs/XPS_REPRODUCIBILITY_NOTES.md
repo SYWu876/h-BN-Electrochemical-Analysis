@@ -10,7 +10,10 @@ The source file is supplied as legacy `.xls`. The helper functions try, in order
 3. reading the converted `.xlsx`
 
 ## Adopted 13-peak definition
-The corrected ML analysis uses the archived XPS peak centers and area fractions:
+The manuscript-facing XPS tables use one SI-aligned canonical 13-peak reporting
+table. Raw profile fitting is retained for the overlay figures and rerun
+diagnostics, but it is not used to overwrite the reported area fractions,
+FWHM values, or PCA descriptor matrix.
 
 - B1s: B-def, B–N, B-ox
 - N1s: N-def, N–B, N-ox

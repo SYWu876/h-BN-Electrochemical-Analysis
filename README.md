@@ -77,24 +77,28 @@ Original or source-level files used as inputs for analysis.
 
 CSV tables prepared for plotting, fitting summaries, and manuscript-linked interpretation.
 
-- `CV/`: descriptor tables, log(i)-log(v) outputs, Dunn-separation products, and figure-facing CV summaries
+- `CV/`: regenerated descriptor tables, log(i)-log(v) outputs, Dunn-separation products, and figure-facing CV summaries
 - `CV_segmentation/`: Ising-type local-field labels, transition points, and Q-KPCA outputs
-- `GCD/`: bounded-fit summaries, residual tables, bootstrap outputs, diagnostics, and the final manuscript summary
+- `GCD/`: preprocessing diagnostics, selected-window masks, bounded-fit summaries, bootstrap outputs, residual tables, and final GCD summary tables regenerated with one shared fitting algorithm
 - `integrated/`: conservative cross-domain descriptor tables for multi-modal evidence visualization
 - `EIS/classical_fit/`: final compact-circuit fit, fitted parameters, and residuals
 - `EIS/quantum_branches/`: branch parameters, metrics, overlays, and deviations
 - `EIS/qaoa_landscapes/`: surrogate slices and coarse/refined QAOA landscape tables
 - `Raman/`: baseline correction, peak fitting, and local spectral segmentation tables
 - `TEM/`: manuscript reference patch-ensemble descriptor tables for the TEM reproducibility workflow
-- `XPS/`: profile-fit summaries, adopted 13-peak table, and corrected descriptor matrix
+- `XPS/`: profile-fit overlays, SI-aligned 13-peak assignment reference, and corrected descriptor matrix
 
 ### `scripts/`
 
 Python scripts and notebooks included for rebuilding selected analysis products. Domain-specific structural and electrochemical workflows are grouped under `scripts/cv/`, `scripts/eis/`, `scripts/gcd/`, `scripts/raman/`, `scripts/tem/`, and `scripts/xps/`. Cross-domain evidence tables are rebuilt from `scripts/integrated/`, and the interactive GCD/EIS quantum-circuit schematic notebook is stored under `scripts/qc_circuit/`.
 
+For new raw datasets, `scripts/cv/00_run_all_cv_analysis.py` rebuilds the CV descriptor summary from the active raw CV table, and `scripts/gcd/00_run_all_gcd_analysis.py` applies the same unified GCD preprocessing, stable-window selection, and bounded fitting recipe to every dataset. The XPS workflow keeps raw profile fitting for overlay figures and diagnostics, while the manuscript-facing XPS assignment, fit-summary, and descriptor tables use the SI-aligned canonical 13-peak reporting convention.
+
+The GCD fitting workflow uses the selected discharge window from the preprocessing diagnostics, resets the fit time origin to the start of that selected window, fits the smoothed selected-window voltage, fixes the residual-polarization relaxation time at 9 s, and bounds the residual-polarization amplitude from the discharge-voltage scale. The nonlinear fit estimates the identifiable masked-window intercept, specific capacitance, and residual-polarization amplitude; `Rs` is then reported as an effective masked-domain descriptor using the same current-density convention as the manuscript summary, rather than as an independently free nonlinear-fit parameter. The same algorithm is used for h-BN and related rerun datasets; the workflow does not copy a separate static summary table.
+
 The first three EIS scripts in `scripts/eis/` are lightweight companion-archive rebuild helpers for selected processed EIS tables. In particular, `scripts/eis/02_eis_quantum_comparison_from_anchor.py` compares manuscript-linked continuous/discrete reference branch parameters against the classical EIS anchor, while `scripts/eis/03_eis_surrogate_qaoa_landscape.py` rebuilds the lightweight surrogate/QAOA CSV products.
 
-For the full EIS shared-objective workflow, use `scripts/eis/04_eis_shared_objective_full_pipeline.py`. It starts from the raw EIS spectrum, performs the unweighted complex least-squares classical anchor fit used for the Nyquist overlay, builds the local surrogate, evaluates an exact p=1 statevector QAOA landscape over the discretized trust-region lattice, decodes the discrete branch, and writes the manuscript EIS surrogate slices, including `R1_Q1_slice.csv` and `Rs_alpha1_slice.csv`, to the selected output directory.
+For the full EIS shared-objective workflow, use `scripts/eis/04_eis_shared_objective_full_pipeline.py`. It starts from the raw EIS spectrum, performs the unweighted complex least-squares classical anchor fit used for the Nyquist overlay, builds the local surrogate, solves the continuous surrogate branch, evaluates an exact p=1 statevector QAOA landscape over the discretized trust-region lattice, decodes the discrete branch, and writes the manuscript EIS surrogate slices, including `R1_Q1_slice.csv` and `Rs_alpha1_slice.csv`, to the selected output directory.
 
 All EIS surrogate slices used in the manuscript can be regenerated from the full shared-objective pipeline.
 
@@ -136,7 +140,7 @@ The study is organized around structural/spectroscopic inputs and three electroc
 
 - **TEM/Raman/XPS**: defect heterogeneity, lattice/patch descriptors, Raman line-shape analysis, and corrected XPS profile/descriptor tables
 - **CV**: peak-current scaling, power-law `b`-value analysis, Dunn-type current separation, Ising-type kinetic segmentation, and Q-KPCA embedding
-- **GCD**: preprocessing diagnostics, QAOA-based stable-window selection, bounded physics-informed fitting, final manuscript summary, and auto-scaled GCD summary regeneration
+- **GCD**: preprocessing diagnostics, QAOA-like stable-window selection, unified bounded physics-informed fitting, bootstrap uncertainty summaries, and final GCD table regeneration
 - **EIS**: compact classical anchor fit and comparison with continuous and discrete quantum-assisted inference under a shared complex-domain objective
 - **QC circuit schematics**: interactive notebook generation of the GCD and EIS quantum-circuit figures used to document the hybrid workflows
 - **Integrated evidence**: conservative descriptor matrix, heatmap table, and exploratory PCA projection assembled only from committed processed tables
