@@ -55,6 +55,9 @@ import matplotlib.pyplot as plt
 PARAM_NAMES = ["Rs", "L", "Rct", "Q1", "alpha1", "Q2", "alpha2"]
 LOG_PARAMS = {"Rs", "L", "Rct", "Q1", "Q2"}
 ALPHA_PARAMS = {"alpha1", "alpha2"}
+ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_INPUT = ROOT / "data" / "raw" / "EIS" / "hbn_EIS_1.csv"
+DEFAULT_OUTPUT = ROOT / "outputs" / "eis_shared_objective"
 
 
 def positive_float(value: str) -> float:
@@ -669,9 +672,12 @@ def make_plots(out_dir: Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Shared-objective h-BN EIS classical + surrogate + QAOA pipeline")
-    parser.add_argument("--input", required=True, type=Path, help="Raw EIS CSV file")
-    parser.add_argument("--output", required=True, type=Path, help="Output directory")
+    parser = argparse.ArgumentParser(
+        description="Shared-objective h-BN EIS classical + surrogate + QAOA pipeline",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT, help="Raw EIS CSV file")
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="Output directory")
     parser.add_argument("--trust-delta", type=positive_float, default=0.08, help="Trust-region half-width in latent coordinates")
     parser.add_argument("--fd-step", type=positive_float, default=0.015, help="Finite-difference step for surrogate Hessian")
     parser.add_argument("--bits-per-parameter", type=bits_per_parameter, default=3, help="Binary discretization per parameter, from 1 to 3 in this release script")
