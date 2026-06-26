@@ -107,9 +107,19 @@ def main():
     parser.add_argument("--figures-dir", default="outputs/figures/Raman")
     args = parser.parse_args()
 
-    input_path = Path(args.input)
-    processed_dir = Path(args.processed_dir)
-    figures_dir = Path(args.figures_dir)
+    repo_root = Path(__file__).resolve().parents[2]
+
+    def resolve_from_repo(path_str):
+        p = Path(path_str)
+        return p if p.is_absolute() else (repo_root / p)
+
+    input_path = resolve_from_repo(args.input)
+    processed_dir = resolve_from_repo(args.processed_dir)
+    figures_dir = resolve_from_repo(args.figures_dir)
+
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input file not found: {input_path}")
+
     processed_dir.mkdir(parents=True, exist_ok=True)
     figures_dir.mkdir(parents=True, exist_ok=True)
 

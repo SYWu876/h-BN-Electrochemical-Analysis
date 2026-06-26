@@ -113,7 +113,7 @@ def main() -> None:
         dz = np.asarray(z, float) - z0
         return float(s0 + g @ dz + 0.5 * dz @ H @ dz)
 
-    # Panel-like data products
+    # qi-like data products
     i1, i2 = 3, 4
     eta = 0.08
     xg = np.linspace(np.clip(z0[i1] - eta, 0, 1), np.clip(z0[i1] + eta, 0, 1), 180)

@@ -495,13 +495,20 @@ def load_rois(repo_root: Path, roi_dir: Optional[Path], source_image: Optional[P
         csv = repo_root / roi_csv if not roi_csv.is_absolute() else roi_csv
         return crop_rois_from_source(src, csv)
 
-    default_dir = repo_root / "data" / "raw" / "TEM" / "rois"
-    if default_dir.exists():
-        files = discover_roi_files(default_dir)
-        return {roi: load_image(path) for roi, path in files.items()}
+    if source_image is None and roi_csv is None:
+        default_dir = repo_root / "data" / "raw" / "TEM" / "rois"
+        if default_dir.exists():
+            files = discover_roi_files(default_dir)
+            return {roi: load_image(path) for roi, path in files.items()}
+
+        default_source = repo_root / "data" / "raw" / "TEM" / "OneView 200kV 800kX 39972.jpg"
+        default_csv = repo_root / "data" / "raw" / "TEM" / "roi_boxes_template.csv"
+        if default_source.is_file() and default_csv.is_file():
+            return crop_rois_from_source(default_source, default_csv)
 
     raise ValueError(
-        "No TEM input mode found. Provide --roi-dir or both --source-image and --roi-csv."
+        "No TEM input mode found. Provide --roi-dir, provide both --source-image and --roi-csv, "
+        "or run from a repository clone that includes the bundled TEM source image and ROI CSV."
     )
 
 
@@ -852,7 +859,7 @@ def plot_figure_1i(df: pd.DataFrame, out_dir: Path) -> None:
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Rebuild TEM ROI descriptors and ensemble panels for the h-BN repository.")
-    parser.add_argument("--repo-root", type=Path, default=Path("."), help="Repository root directory.")
+    parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2], help="Repository root directory.")
     parser.add_argument("--roi-dir", type=Path, default=None, help="Directory containing cropped ROI images.")
     parser.add_argument("--source-image", type=Path, default=None, help="Path to a single source TEM image.")
     parser.add_argument("--roi-csv", type=Path, default=None, help="CSV containing ROI crop boxes for the source image.")
